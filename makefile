@@ -18,7 +18,7 @@ SRCDIR=src
 OUTPUTDIR=bin
 EXE=parking
 
-FILES= # TODO
+FILES= KeyboardManagement.h
 
 HEADERS=$(addprefix $(SRCDIR)/,$(FILES))
 IMPL=$(HEADERS:.h=.cpp)

@@ -34,7 +34,7 @@
 //---------------------------------------------------- Fonctions publiques
 void KeyboardManagement ( )
 {
-	
+	Menu ( );
 } // Fin de KeyboardManagement
 
 void Commande ( char code, unsigned int value )
