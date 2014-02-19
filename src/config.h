@@ -1,18 +1,10 @@
-/*************************************************************************
-                           XXX  -  description
-                             -------------------
-    début                : XXX
-    copyright            : (C) XXX par XXX
-    e-mail               : XXX
-*************************************************************************/
-
-//---------- Interface du module <XXX> (fichier XXX.h) ---------
-#if ! defined ( XXX_H )
-#define XXX_H
+//---------- Interface du module <config> (fichier config.h) ---------
+#if ! defined ( CONFIG_H )
+#define CONFIG_H
 
 //------------------------------------------------------------------------
-// Rôle du module <XXX>
-//
+// Rôle de l'interface <config>
+// This header file makes available common constants and types.
 //
 //------------------------------------------------------------------------
 
@@ -20,16 +12,12 @@
 //--------------------------------------------------- Interfaces utilisées
 
 //------------------------------------------------------------- Constantes
+// TODO: executable name (for use with ftok)
+// TODO: other useful constants?
 
 //------------------------------------------------------------------ Types
+// TODO: struct type for requests (used in the shared memory)
+// TODO: struct typ for incoming cars (used in mailbox)
 
-//////////////////////////////////////////////////////////////////  PUBLIC
-//---------------------------------------------------- Fonctions publiques
-// type Nom ( liste de paramètres );
-// Mode d'emploi :
-//
-// Contrat :
-//
-
-#endif // XXX_H
+#endif // CONFIG_H
 
