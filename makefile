@@ -18,7 +18,7 @@ HEADERS=$(addprefix $(SRCDIR)/,$(FILES))
 IMPL=$(HEADERS:.h=.cpp)
 
 OBJ=$(addprefix $(OUTPUTDIR)/,$(FILES:.h=.o))
-OBJ+=$(OUTPUTDIR)/$(EXE).o
+OBJ+=$(OUTPUTDIR)/main.o
 
 .PHONY: $(CLEAN)
 ALL: $(EXE)
