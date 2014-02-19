@@ -7,12 +7,19 @@
 //
 
 #include <iostream>
+#include <unistd.h>
+
+#include "Outils.h"
 
 int main(int argc, const char * argv[])
 {
 
-	// insert code here...
 	std::cout << "Hello, World!\n";
-    return 0;
+	
+	InitialiserApplication( XTERM );
+	sleep(2);
+	TerminerApplication();
+
+	return 0;
 }
 

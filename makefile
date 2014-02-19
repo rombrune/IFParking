@@ -2,8 +2,14 @@ COMPILER=g++
 CPPFLAGS=-w -Wall
 LINKER=@g++
 LINKERFLAGS=
-INCPATH=
-LIBPATH=
+
+PUBLIC_DIR=/public/tp/tp-multitache/
+INCPATH=-I $(PUBLIC_DIR)
+LIBPATH=-L $(PUBLIC_DIR)
+# In case public is not mounted at the same point
+INCPATH+= -I /shares$(PUBLIC_DIR)
+LIBPATH+= -L /shares$(PUBLIC_DIR)
+LIBS=-lcurses -ltcl -ltp
 
 ECHO=@echo
 CLEAN=clean
@@ -26,7 +32,7 @@ ALL: $(EXE)
 # Ouput executable
 $(EXE): $(OBJ)
 	$(ECHO) Linking $(EXE)...
-	$(LINKER) $(LINKERFLAGS) $(INCPATH) -o $(OUTPUTDIR)/$(EXE) $(OBJ) $(LIBS)
+	$(LINKER) $(LINKERFLAGS) $(INCPATH) $(LIBPATH) -o $(OUTPUTDIR)/$(EXE) $(OBJ) $(LIBS)
 
 # Generic rule
 $(OUTPUTDIR)/%.o: $(SRCDIR)/%.cpp
