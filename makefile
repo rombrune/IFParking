@@ -26,8 +26,12 @@ IMPL=$(HEADERS:.h=.cpp)
 OBJ=$(addprefix $(OUTPUTDIR)/,$(FILES:.h=.o))
 OBJ+=$(OUTPUTDIR)/main.o
 
-.PHONY: $(CLEAN)
-ALL: $(EXE)
+.PHONY: all before $(CLEAN)
+
+all: before $(EXE)
+
+before:
+	if [[ ! -d bin ]]; then mkdir bin; fi
 
 # Ouput executable
 $(EXE): $(OBJ)
