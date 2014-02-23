@@ -1,17 +1,17 @@
 /*************************************************************************
-							KeyboardManagement
+							Entrance
 							-------------------
 
 *************************************************************************/
 
-//---------- Réalisation de la tâche <KeyboardManagement> (fichier KeyboardManagement.cpp) ---
+//---------- Réalisation de la tâche <Entrance> (fichier Entrance.cpp) ---
 
 /////////////////////////////////////////////////////////////////  INCLUDE
 //-------------------------------------------------------- Include système
 #include <cstdlib>
 //------------------------------------------------------ Include personnel
-#include "KeyboardManagement.h"
-#include "Menu.h"
+#include "Entrance.h"
+#include "config.h"
 ///////////////////////////////////////////////////////////////////  PRIVE
 //------------------------------------------------------------- Constantes
 
@@ -32,37 +32,17 @@
 
 //////////////////////////////////////////////////////////////////  PUBLIC
 //---------------------------------------------------- Fonctions publiques
-void KeyboardManagement ( )
+void Entrance ( )
+// Algorithme :
+// 1. Dequeue a car (or wait for a car to be available)
+// 2. Read the number of available spots in the semcount
+// 3. Read the number of current entrance requests in the shared memory
+// 4. If available > request, go to 6
+// 5. Place a request in the shared memory and wait for SIGUSR1
+// 6. A spot is available for us, call GarerVoiture()
+// 7. Sleep for ENTRANCE_SLEEP_DELAY seconds
+// 8. Goto step 1.
 {
-	Menu ( );
-} // Fin de KeyboardManagement
+	// TODO
+} // Fin de Entrance
 
-void Commande ( char code, unsigned int value )
-{
-	switch ( code ) {
-		// Quit the application
-		case 'q':
-			exit(0);
-			break;
-
-		// Queue a new prioritary car at entrance <value>
-		case 'p':
-			// Create a new priority car
-			// Place it into the mailbox of entrance <value>
-			break;
-
-		// Queue a new normal car at entrance <value>
-		case 'a':
-			// Create a new normal car
-			// Place it into the mailbox of entrance <value>
-			break;
-
-		// Car parked at spot <value> now wants to leave
-		case 's':
-			// Write to the exit gate through communication pipe
-			break;
-
-		default:
-			break;
-	}
-}

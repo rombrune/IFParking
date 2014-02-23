@@ -1,16 +1,16 @@
-/*************************************************************************
-							KeyboardManagement
+*************************************************************************
+							Entrance
 							-------------------
 
 *************************************************************************/
 
-//---------- Interface de la tâche <KeyboardManagement> (fichier KeyboardManagement.h) -------
-#if ! defined ( KEYBOARDMANAGEMENT_H_ )
-#define KEYBOARDMANAGEMENT_H_
+//---------- Interface de la tâche <Entrance> (fichier Entrance.h) -------
+#if ! defined ( ENTRANCE_H_ )
+#define ENTRANCE_H_
 
 //------------------------------------------------------------------------
-// Rôle de la tâche <KeyboardManagement>
-//
+// Rôle de la tâche <Entrance>
+// Manages one car queue and allows one car to enter at a time.
 //
 //------------------------------------------------------------------------
 
@@ -23,15 +23,8 @@
 
 //////////////////////////////////////////////////////////////////  PUBLIC
 //---------------------------------------------------- Fonctions publiques
-void KeyboardManagement ( );
+void Entrance ( );
 // Mode d'emploi :
-// Handles keyboard input and sends the appropriate command.
-// This procedure should be called in its own process, it only returns
-// when the user asks to quit the program.
+// 
 
-void Commande ( char code, unsigned int valeur );
-// Mode d'emploi :
-// Executes the command corresponding to the received input.
-// For use by the Menu module.
-
-#endif // KEYBOARDMANAGEMENT_H_
+#endif // ENTRANCE_H_

@@ -15,6 +15,9 @@
 // TODO: executable name (for use with ftok)
 // TODO: other useful constants?
 
+// Number of seconds to sleep right after letting a car enter
+const int ENTRANCE_SLEEP_DELAY = 1;
+
 //------------------------------------------------------------------ Types
 // TODO: struct type for requests (used in the shared memory)
 // TODO: struct typ for incoming cars (used in mailbox)
