@@ -1,4 +1,3 @@
-#include <iostream>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -21,7 +20,7 @@ void initResources ( )
 	
 	// Create the mailbox (KeyboardManagement => Entrances)
 	int key = ftok(EXEC_NAME, KEY);
-	int mailboxId = msgget ( key, (IPC_CREAT|IPC_EXCL|0400) );
+	int mailboxId = msgget ( key, (IPC_CREAT|IPC_EXCL|0600) );
 }
 
 void endSync ( pid_t pid )

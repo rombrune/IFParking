@@ -46,46 +46,61 @@ static TypeBarriere getTypeBarriere ( int entranceNumber, Priority priority )
 		}
 	}
 }
+static void queueCar ( TypeBarriere entrance, Priority priority )
+// Mode d'emploi :
+// Adds a new car with the given priority at given entrance
 // Contrat :
 //
-// Algorithme :
-//
-//{
-//} //----- fin de nom
+{
+	// Prepare the message
+	// The message type indicates the entrance
+	CarMessage * message = new CarMessage ( entrance, priority );
+
+	// Insert it into the mailbox
+	int key = ftok( EXEC_NAME, KEY );
+	int mailboxId = msgget ( key, IPC_EXCL );
+	// TODO: test for failure?
+	int size = sizeof ( CarMessage ) - sizeof ( long );
+	msgsnd ( mailboxId, message, size, 0 );
+
+	delete message;
+}
 
 //////////////////////////////////////////////////////////////////  PUBLIC
 //---------------------------------------------------- Fonctions publiques
 void KeyboardManagement ( )
 {
-	Menu ( );
+	for ( ; ; )
+	{
+		Menu ( );
+	}
 } // Fin de KeyboardManagement
 
 void Commande ( char code, unsigned int value )
 {
 	switch ( code ) {
 		// Quit the application
-		case 'q':
+		case 'Q':
 			exit( 0 );
 			break;
 
 		// Queue a new prioritary car at entrance <value>
-		case 'p':
-			exit( 0 );
+		case 'P':
+			queueCar ( getTypeBarriere ( value, TEACHER ),  TEACHER );
 			break;
 
 		// Queue a new normal car at entrance <value>
-		case 'a':
-			exit( 0 );
+		case 'A':
+			queueCar ( getTypeBarriere ( value, OTHER ),  OTHER );
 			break;
 
 		// Car parked at spot <value> now wants to leave
-		case 's':
+		case 'S':
 			exit( 0 );
 			// Write to the exit gate through communication pipe
 			break;
 
 		default:
-			exit( 0 );
 			break;
 	}
 }
