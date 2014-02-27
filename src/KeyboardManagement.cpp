@@ -9,9 +9,13 @@
 /////////////////////////////////////////////////////////////////  INCLUDE
 //-------------------------------------------------------- Include système
 #include <cstdlib>
+#include <sys/msg.h>
 //------------------------------------------------------ Include personnel
-#include "KeyboardManagement.h"
+#include "Outils.h"
 #include "Menu.h"
+
+#include "config.h"
+#include "KeyboardManagement.h"
 ///////////////////////////////////////////////////////////////////  PRIVE
 //------------------------------------------------------------- Constantes
 
@@ -20,45 +24,79 @@
 //---------------------------------------------------- Variables statiques
 
 //------------------------------------------------------ Fonctions privées
-//static type nom ( liste de paramètres )
+static TypeBarriere getTypeBarriere ( int entranceNumber, Priority priority )
 // Mode d'emploi :
-//
+// Returns the TypeBarriere corresponding to the given entrance number.
+// Contrat :
+// 1 <= entranceNumber <= 2 
+{
+	if ( entranceNumber == 2 )
+	{
+		return ENTREE_GASTON_BERGER;
+	}
+	else
+	{
+		if ( TEACHER == priority )
+		{
+			return PROF_BLAISE_PASCAL;
+		}
+		else
+		{
+			return AUTRE_BLAISE_PASCAL;
+		}
+	}
+}
+static void queueCar ( TypeBarriere entrance, Priority priority )
+// Mode d'emploi :
+// Adds a new car with the given priority at given entrance
 // Contrat :
 //
-// Algorithme :
-//
-//{
-//} //----- fin de nom
+{
+	// Prepare the message
+	// The message type indicates the entrance
+	CarMessage * message = new CarMessage ( entrance, priority );
+
+	// Insert it into the mailbox
+	int key = ftok( EXEC_NAME, KEY );
+	int mailboxId = msgget ( key, IPC_EXCL );
+	// TODO: test for failure?
+	int size = sizeof ( CarMessage ) - sizeof ( long );
+	msgsnd ( mailboxId, message, size, 0 );
+
+	delete message;
+}
 
 //////////////////////////////////////////////////////////////////  PUBLIC
 //---------------------------------------------------- Fonctions publiques
 void KeyboardManagement ( )
 {
-	Menu ( );
+	for ( ; ; )
+	{
+		Menu ( );
+	}
 } // Fin de KeyboardManagement
 
 void Commande ( char code, unsigned int value )
 {
 	switch ( code ) {
 		// Quit the application
-		case 'q':
-			exit(0);
+		case 'Q':
+			exit( 0 );
 			break;
 
 		// Queue a new prioritary car at entrance <value>
-		case 'p':
-			// Create a new priority car
-			// Place it into the mailbox of entrance <value>
+		case 'P':
+			queueCar ( getTypeBarriere ( value, TEACHER ),  TEACHER );
 			break;
 
 		// Queue a new normal car at entrance <value>
-		case 'a':
-			// Create a new normal car
-			// Place it into the mailbox of entrance <value>
+		case 'A':
+			queueCar ( getTypeBarriere ( value, OTHER ),  OTHER );
 			break;
 
 		// Car parked at spot <value> now wants to leave
-		case 's':
+		case 'S':
+			exit( 0 );
 			// Write to the exit gate through communication pipe
 			break;
 

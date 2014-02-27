@@ -10,17 +10,45 @@
 
 /////////////////////////////////////////////////////////////////  INCLUDE
 //--------------------------------------------------- Interfaces utilisées
+#include "Outils.h"
 
 //------------------------------------------------------------- Constantes
-// TODO: executable name (for use with ftok)
+#define EXEC_NAME "parking"
+#define KEY 3
+
 // TODO: other useful constants?
 
 // Number of seconds to sleep right after letting a car enter
-const int ENTRANCE_SLEEP_DELAY = 1;
+#define ENTRANCE_SLEEP_DELAY 1
 
 //------------------------------------------------------------------ Types
+enum Priority {
+	TEACHER, OTHER, NONE
+};
+
 // TODO: struct type for requests (used in the shared memory)
-// TODO: struct typ for incoming cars (used in mailbox)
+
+
+// Message structure for incoming cars (used in mailbox)
+struct CarMessage {
+	// Message type (one type per entrance)
+	long type;
+	// Message body
+	Priority priority;
+	// TODO: add auto-incrementing license plate?
+
+	CarMessage ( TypeBarriere t, Priority p )
+		: type( t ), priority ( p )
+	{
+		// Empty
+	}
+
+	CarMessage ( )
+		: type( 0 ), priority ( NONE )
+	{
+		// Empty
+	}
+};
 
 #endif // CONFIG_H
 
