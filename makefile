@@ -18,7 +18,7 @@ SRCDIR=src
 OUTPUTDIR=bin
 EXE=parking
 
-FILES= KeyboardManagement.h
+FILES= KeyboardManagement.h Entrance.h
 
 HEADERS=$(addprefix $(SRCDIR)/,$(FILES))
 IMPL=$(HEADERS:.h=.cpp)
@@ -44,6 +44,7 @@ $(OUTPUTDIR)/%.o: $(SRCDIR)/%.cpp
 	$(COMPILER) $(CPPFLAGS) $(INCPATH) -o $@ -c $<
 
 # Explicit dependancies
+$(SRCDIR)/%.cpp: $(SRCDIR)/config.h
 
 $(CLEAN):
 	$(ECHO) Cleaning project.
