@@ -71,3 +71,6 @@ Debug/
 *.exe
 *.app
 
+# PROJECT SPECIFIC
+clean.sh
+
