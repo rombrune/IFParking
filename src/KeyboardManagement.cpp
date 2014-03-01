@@ -55,17 +55,16 @@ static void queueCar ( TypeBarriere entrance, TypeUsager priority )
 {
 	// Prepare the message
 	// The message type indicates the entrance
-	CarRequest * message = new CarRequest ( entrance, priority );
+	Car car ( priority );
+	CarRequest message ( entrance, car );
 
 	// Insert it into the mailbox
-	int key = ftok( EXEC_NAME, KEY );
+	int key = ftok ( EXEC_NAME, KEY );
 	int mailboxId = msgget ( key, IPC_EXCL );
 	// TODO: test for failure?
 	int size = sizeof ( CarRequest ) - sizeof ( long );
-	msgsnd ( mailboxId, message, size, 0 );
-
-	delete message;
-}
+	msgsnd ( mailboxId, &message, size, 0 );
+} // Fin de queueCar
 
 //////////////////////////////////////////////////////////////////  PUBLIC
 //---------------------------------------------------- Fonctions publiques
@@ -104,4 +103,4 @@ void Commande ( char code, unsigned int value )
 		default:
 			break;
 	}
-}
+} // Fin de Commande

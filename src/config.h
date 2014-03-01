@@ -10,6 +10,7 @@
 
 /////////////////////////////////////////////////////////////////  INCLUDE
 //--------------------------------------------------- Interfaces utilisées
+#include <time.h>
 #include <vector>
 
 #include "Outils.h"
@@ -29,17 +30,26 @@ struct Car {
 
 	unsigned int licensePlate;
 	TypeUsager priority;
+	// Timestamp of the time at which this car has entered the lot
+	// Stays at 0 until the car has not fully parked.
+	time_t entranceTime;
 
-	Car ( Priority p )
-		: priority ( p )
+	Car ( TypeUsager p )
+		: priority ( p ), entranceTime ( 0 )
 	{
 		licensePlate = counter;
 		counter = (counter + 1) % 999;
 	}
 
+	// Default constructor: do not increment the counter
+	Car ( )
+		: licensePlate ( -1 ), priority ( AUCUN ), entranceTime ( 0 )
+	{
+		// Empty
+	}
 	// Copy constructor: do not increment the counter
 	Car ( Car const & other )
-		: licensePlate ( other.licensePlate ), priority ( other.priority )
+		: licensePlate ( other.licensePlate ), priority ( other.priority ), entranceTime ( other.entranceTime )
 	{
 		// Empty
 	}
@@ -54,6 +64,11 @@ struct CarRequest {
 
 	CarRequest ( TypeBarriere t, Car c )
 		: type ( t ), car ( c )
+	{
+		// Empty
+	}
+	CarRequest ( )
+		: type ( AUCUNE )
 	{
 		// Empty
 	}

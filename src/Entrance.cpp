@@ -9,13 +9,19 @@
 /////////////////////////////////////////////////////////////////  INCLUDE
 //-------------------------------------------------------- Include système
 #include <cstdlib>
+#include <time.h>
 #include <unistd.h>
 #include <signal.h>
 #include <sys/wait.h>
 #include <sys/msg.h>
-#include <set>
+#include <errno.h>
+#include <map>
+#include <iostream> 
+// TODO: remove ^
 using namespace std;
 //------------------------------------------------------ Include personnel
+#include "Outils.h"
+
 #include "Entrance.h"
 #include "config.h"
 ///////////////////////////////////////////////////////////////////  PRIVE
@@ -24,20 +30,51 @@ using namespace std;
 //------------------------------------------------------------------ Types
 
 //---------------------------------------------------- Variables statiques
-static set<pid_t> currentValets;
+// A map to hold the currently running GarerVoiture tasks
+static map<pid_t, Car> currentValets;
 
 //------------------------------------------------------ Fonctions privées
-static void die ( int signalNumber )
+static void ack ( int signalNumber )
+// Mode d'emploi :
+// Acknowledges the death of a child GarerParking task.
 {
-	// TODO: kill any running GarerVoiture task
-	for ( set<pid_t>::iterator it = currentValets.begin();
+	// Retrieve the pid of the terminated child
+	int status;
+	pid_t pid;
+	// For each child task that has died
+	while ( (pid = waitpid ( -1, &status, WNOHANG )) != - 1 )
+	{
+		if ( WIFEXITED ( status ) )
+		{
+			// Retrieve the spot number (encoded into the return value)
+			int spotNumber = WEXITSTATUS ( status );
+
+			Car car = currentValets[pid];
+			car.entranceTime = time ( NULL );
+
+			// Remove this pid from the list of running tasks
+			currentValets.erase ( pid );
+
+			// Display the newly parked car
+			AfficherPlace ( spotNumber, car.priority, 
+							car.licensePlate, car.entranceTime);
+		}
+	}
+} // Fin de ack
+
+static void die ( int signalNumber )
+// Mode d'emploi :
+// Use for controlled destruction. Kills any child task.
+{
+	for ( map<pid_t, Car>::iterator it = currentValets.begin();
 			it != currentValets.end(); ++it )
 	{
-		kill ( *it, SIGUSR2 );
-		waitpid( *it, NULL, 0 );
+		kill ( it->first, SIGUSR2 );
+		waitpid( it->first, NULL, 0 );
 	}
 	exit ( 0 );
-}
+} // Fin de die
+
 static void init ( )
 {
 	// Respond to SIGUSR2 (= controlled destruction)
@@ -46,29 +83,45 @@ static void init ( )
 	sigemptyset ( &action.sa_mask );
 	action.sa_flags = 0;
 	sigaction ( SIGUSR2, &action, NULL );
-}
 
-static void waitForCar ( TypeBarriere entrance )
+	// Respond to SIGCHLD (= valet has finished parking car)
+	action.sa_handler = ack;
+	sigaction ( SIGCHLD, &action, NULL );
+} // Fin de init
+
+static Car waitForCar ( TypeBarriere entrance )
 // Mode d'emploi :
 // Waits until a new car arrives at this entrance (in the mailbox)
 // (sent by the KeyboardManagement task).
 // Contrat :
 //
 {
-	// Allocate memory to receive the message
-	CarRequest * message = (CarRequest *) malloc ( sizeof ( CarRequest ) );
+	// Placeholder for the incoming message
+	CarRequest message;
 
 	// Read from the mailbox
-	int key = ftok(EXEC_NAME, KEY);
+	int key = ftok ( EXEC_NAME, KEY );
 	int mailboxId = msgget ( key, IPC_EXCL );
 
 	// This call will wait until it can withdraw a message from the mailbox
 	// TODO: test for failure? (e.g. interrupted by a signal)
 	int size = sizeof ( CarRequest ) - sizeof ( long );
-	msgrcv ( mailboxId, message, size, entrance, 0 );
+	int status;
+	// Restart this system call as long as we really have not received a car
+	// (it could very well be interrupted by a signal)
+	do
+	{
+		status = msgrcv ( mailboxId, &message, size, entrance, 0 );
 
-	free( message );
-}
+		// Unhandled error case
+		if ( status == -1 && errno != EINTR )
+		{
+			die ( 0 );
+		}
+	} while ( status == -1 );
+
+	return message.car;
+} // Fin de waitForCar
 
 //////////////////////////////////////////////////////////////////  PUBLIC
 //---------------------------------------------------- Fonctions publiques
@@ -87,15 +140,12 @@ void Entrance ( TypeBarriere entrance )
 
 	for ( ; ; )
 	{
-		waitForCar ( entrance );
+		Car next = waitForCar ( entrance );
 
 		// TODO: check that it can indeed park and place request if necessary
 
 		pid_t valetPid = GarerVoiture ( entrance );
-		currentValets.insert ( valetPid );
-		// TODO: use a proper signal handler instead
-		// (the return value is the spot occupied by the car)
-		waitpid( valetPid, NULL, 0 );
+		currentValets[valetPid] = next;
 
 		sleep ( ENTRANCE_SLEEP_DELAY );
 	}
