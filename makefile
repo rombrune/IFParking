@@ -6,7 +6,7 @@ LINKERFLAGS=
 PUBLIC_DIR=/public/tp/tp-multitache/
 INCPATH=-I $(PUBLIC_DIR)
 LIBPATH=-L $(PUBLIC_DIR)
-# In case public is not mounted at the same point
+# In case the public dir is not mounted at the same point
 INCPATH+= -I /shares$(PUBLIC_DIR)
 LIBPATH+= -L /shares$(PUBLIC_DIR)
 LIBS=-lcurses -ltcl -ltp
@@ -39,12 +39,12 @@ $(EXE): $(OBJ)
 	$(LINKER) $(LINKERFLAGS) $(INCPATH) $(LIBPATH) -o $(OUTPUTDIR)/$(EXE) $(OBJ) $(LIBS)
 
 # Generic rule
-$(OUTPUTDIR)/%.o: $(SRCDIR)/%.cpp
+$(OUTPUTDIR)/%.o: $(SRCDIR)/%.cpp $(SRCDIR)/config.h
 	$(ECHO) Compiling $<...
 	$(COMPILER) $(CPPFLAGS) $(INCPATH) -o $@ -c $<
 
 # Explicit dependancies
-$(SRCDIR)/%.cpp: $(SRCDIR)/config.h
+
 
 $(CLEAN):
 	$(ECHO) Cleaning project.
