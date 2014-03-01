@@ -10,41 +10,24 @@
 #include "KeyboardManagement.h"
 #include "Entrance.h"
 
-static pid_t KeyboardManagementPid;
-static pid_t HourPid;
-static pid_t EntrancePid;
+static pid_t keyboardManagementPid;
+static pid_t hourPid;
+static pid_t entrance1Pid, entrance2Pid, entrance3Pid;
 
 // TODO: use the Task template
 
-void initResources ( )
+static void ack ( int signalNumber )
+// Mode d'emploi :
+// Acknowledges the death of every child process
 {
-	// TODO: check that permissions are as tight as possible
-	
-	// Create the mailbox (KeyboardManagement => Entrances)
-	int key = ftok(EXEC_NAME, KEY);
-	int mailboxId = msgget ( key, (IPC_CREAT|IPC_EXCL|0600) );
-}
-
-void endSync ( pid_t pid )
-{
-	// The call could be interrupted by a received signal.
-	// But since we really want to wait, we relauch it every
-	// time that happens.
-	while ( -1 == waitpid ( pid, NULL, 0 ) )
+	pid_t pid;
+	do
 	{
-		// Empty
-	}
-}
+		pid = waitpid ( -1, NULL, WNOHANG );
+	} while ( pid == 1 );
+} // Fin de ack
 
-void freeResources ( )
-{
-	// Free the mailbox
-	int key = ftok(EXEC_NAME, KEY);
-	int mailboxId = msgget ( key, IPC_EXCL );
-	msgctl ( mailboxId, IPC_RMID, 0 );
-}
-
-int main ( int argc, const char * argv[] )
+static void init ( )
 {
 	// By default, mask SIGUSR2 signal
 	struct sigaction action;
@@ -53,42 +36,76 @@ int main ( int argc, const char * argv[] )
 	action.sa_flags = 0;
 	sigaction ( SIGUSR2, &action, NULL );
 
+	// TODO: check that permissions are as tight as possible
+	
+	// Create the mailbox (KeyboardManagement => Entrances)
+	int key = ftok(EXEC_NAME, KEY);
+	int mailboxId = msgget ( key, (IPC_CREAT|IPC_EXCL|0600) );
+} // Find de init
 
+static void destroy ( )
+{
+	// Free the mailbox
+	int key = ftok(EXEC_NAME, KEY);
+	int mailboxId = msgget ( key, IPC_EXCL );
+	msgctl ( mailboxId, IPC_RMID, 0 );
+} // Fin de destroy
+
+int main ( int argc, const char * argv[] )
+{
 	// ---------- INITIALIZATION
 	InitialiserApplication( XTERM );
-	initResources ( );
+	init ( );
 
-	// ---------- RUN
 	// We should test the value returned by fork, there could be
 	// an error when forking
-	if ( (EntrancePid = fork()) == 0 )
+	if ( (entrance1Pid = fork()) == 0 )
 	{
 		Entrance ( PROF_BLAISE_PASCAL );
 	}
+	else if ( (entrance2Pid = fork()) == 0 )
+	{
+		Entrance ( AUTRE_BLAISE_PASCAL );
+	}
+	else if ( (entrance3Pid = fork()) == 0 )
+	{
+		Entrance ( ENTREE_GASTON_BERGER );
+	}
+	else if ( (keyboardManagementPid = fork()) == 0 )
+	{
+		KeyboardManagement ( );
+	}
 	else
 	{
-		HourPid = ActiverHeure ( );
+		hourPid = ActiverHeure ( );
 
-		if ( (KeyboardManagementPid = fork()) == 0 )
+		// Wait for the user to quit the application
+		// The call could be interrupted by a received signal.
+		// But since we really want to wait, we relauch it every
+		// time that happens.
+		while ( -1 == waitpid ( keyboardManagementPid, NULL, 0 ) )
 		{
-			KeyboardManagement ( );
+			// Empty
 		}
-		else
-		{
-			// Wait for the user to quit the application
-			endSync ( KeyboardManagementPid );
 
-			// ---------- DESTRUCTION
-			kill ( HourPid, SIGUSR2 );
-			endSync ( HourPid );
+		// ---------- DESTRUCTION
+		// From now on, handle SIGCHLD for normal process end sync
+		struct sigaction action;
+		sigemptyset ( &action.sa_mask );
+		action.sa_handler = ack;
+		action.sa_flags = 0;
+		sigaction ( SIGCHLD, &action, NULL );
 
-			kill ( EntrancePid, SIGUSR2 );
-			endSync ( EntrancePid );
+		// Kill every created process in reverse order
+		kill ( hourPid, SIGUSR2 );
+		kill ( entrance3Pid, SIGUSR2 );
+		kill ( entrance2Pid, SIGUSR2 );
+		kill ( entrance1Pid, SIGUSR2 );
 
-			freeResources ( );
-			TerminerApplication ( );
-			exit ( 0 );
-		}
+		// TODO: wait for every processes to be down?
+		destroy ( );
+		TerminerApplication ( );
+		exit ( 0 );
 	}
 }
 
