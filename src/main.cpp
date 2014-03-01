@@ -14,6 +14,8 @@ static pid_t KeyboardManagementPid;
 static pid_t HourPid;
 static pid_t EntrancePid;
 
+// TODO: use the Task template
+
 void initResources ( )
 {
 	// TODO: check that permissions are as tight as possible

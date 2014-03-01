@@ -54,13 +54,13 @@ static void queueCar ( TypeBarriere entrance, Priority priority )
 {
 	// Prepare the message
 	// The message type indicates the entrance
-	CarMessage * message = new CarMessage ( entrance, priority );
+	CarRequest * message = new CarRequest ( entrance, priority );
 
 	// Insert it into the mailbox
 	int key = ftok( EXEC_NAME, KEY );
 	int mailboxId = msgget ( key, IPC_EXCL );
 	// TODO: test for failure?
-	int size = sizeof ( CarMessage ) - sizeof ( long );
+	int size = sizeof ( CarRequest ) - sizeof ( long );
 	msgsnd ( mailboxId, message, size, 0 );
 
 	delete message;

@@ -56,7 +56,7 @@ static void waitForCar ( TypeBarriere entrance )
 //
 {
 	// Allocate memory to receive the message
-	CarMessage * message = new CarMessage();
+	CarRequest * message = (CarRequest *) malloc ( sizeof ( CarRequest ) );
 
 	// Read from the mailbox
 	int key = ftok(EXEC_NAME, KEY);
@@ -64,10 +64,10 @@ static void waitForCar ( TypeBarriere entrance )
 
 	// This call will wait until it can withdraw a message from the mailbox
 	// TODO: test for failure? (e.g. interrupted by a signal)
-	int size = sizeof ( CarMessage ) - sizeof ( long );
+	int size = sizeof ( CarRequest ) - sizeof ( long );
 	msgrcv ( mailboxId, message, size, entrance, 0 );
 
-	delete message;
+	free( message );
 }
 
 //////////////////////////////////////////////////////////////////  PUBLIC

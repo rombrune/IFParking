@@ -10,43 +10,73 @@
 
 /////////////////////////////////////////////////////////////////  INCLUDE
 //--------------------------------------------------- Interfaces utilisées
+#include <vector>
+
 #include "Outils.h"
 
 //------------------------------------------------------------- Constantes
+// For use with ftok
 #define EXEC_NAME "parking"
 #define KEY 3
-
-// TODO: other useful constants?
-
 // Number of seconds to sleep right after letting a car enter
 #define ENTRANCE_SLEEP_DELAY 1
 
 //------------------------------------------------------------------ Types
+// Vehicles can have different priorities (teacher > other)
 enum Priority {
 	TEACHER, OTHER, NONE
 };
 
-// TODO: struct type for requests (used in the shared memory)
+// Structure representing a car
+struct Car {
+	// License plate counter
+	static unsigned int counter;
 
-
-// Message structure for incoming cars (used in mailbox)
-struct CarMessage {
-	// Message type (one type per entrance)
-	long type;
-	// Message body
+	unsigned int licensePlate;
 	Priority priority;
-	// TODO: add auto-incrementing license plate?
 
-	CarMessage ( TypeBarriere t, Priority p )
-		: type( t ), priority ( p )
+	Car ( Priority p )
+		: priority ( p )
+	{
+		licensePlate = counter;
+		counter = (counter + 1) % 999;
+	}
+
+	// Copy constructor: do not increment the counter
+	Car ( Car const & other )
+		: licensePlate ( other.licensePlate ), priority ( other.priority )
 	{
 		// Empty
 	}
+};
 
-	CarMessage ( )
-		: type( 0 ), priority ( NONE )
+// Structure representing a car that wants to enter the parking lot
+// For use in mailbox and as part of the parking lot state
+struct CarRequest {
+	// Message type (one type per entrance)
+	long type;
+	Car car;
+
+	CarRequest ( TypeBarriere t, Car c )
+		: type ( t ), car ( c )
 	{
 		// Empty
+	}
+};
+
+// Structure holding the necessary informations to represent
+// the current state of the parking lot
+// For use in the shared memory
+struct State {
+	// Number of free spots
+	int freeSpots;
+	// Requests currently posted
+	std::vector<CarRequest> requests;
+
+	State ( )
+		: freeSpots ( NB_PLACES )
+	{
+
 	}
 };
 
