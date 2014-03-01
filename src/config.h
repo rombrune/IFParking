@@ -22,18 +22,13 @@
 #define ENTRANCE_SLEEP_DELAY 1
 
 //------------------------------------------------------------------ Types
-// Vehicles can have different priorities (teacher > other)
-enum Priority {
-	TEACHER, OTHER, NONE
-};
-
 // Structure representing a car
 struct Car {
 	// License plate counter
 	static unsigned int counter;
 
 	unsigned int licensePlate;
-	Priority priority;
+	TypeUsager priority;
 
 	Car ( Priority p )
 		: priority ( p )

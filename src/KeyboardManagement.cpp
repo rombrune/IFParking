@@ -24,7 +24,7 @@
 //---------------------------------------------------- Variables statiques
 
 //------------------------------------------------------ Fonctions privées
-static TypeBarriere getTypeBarriere ( int entranceNumber, Priority priority )
+static TypeBarriere getTypeBarriere ( int entranceNumber, TypeUsager priority )
 // Mode d'emploi :
 // Returns the TypeBarriere corresponding to the given entrance number.
 // Contrat :
@@ -36,7 +36,7 @@ static TypeBarriere getTypeBarriere ( int entranceNumber, Priority priority )
 	}
 	else
 	{
-		if ( TEACHER == priority )
+		if ( PROF == priority )
 		{
 			return PROF_BLAISE_PASCAL;
 		}
@@ -45,8 +45,9 @@ static TypeBarriere getTypeBarriere ( int entranceNumber, Priority priority )
 			return AUTRE_BLAISE_PASCAL;
 		}
 	}
-}
-static void queueCar ( TypeBarriere entrance, Priority priority )
+} // Fin de getTypeBarriere
+
+static void queueCar ( TypeBarriere entrance, TypeUsager priority )
 // Mode d'emploi :
 // Adds a new car with the given priority at given entrance
 // Contrat :
@@ -86,12 +87,12 @@ void Commande ( char code, unsigned int value )
 
 		// Queue a new prioritary car at entrance <value>
 		case 'P':
-			queueCar ( getTypeBarriere ( value, TEACHER ),  TEACHER );
+			queueCar ( getTypeBarriere ( value, PROF ),  PROF );
 			break;
 
 		// Queue a new normal car at entrance <value>
 		case 'A':
-			queueCar ( getTypeBarriere ( value, OTHER ),  OTHER );
+			queueCar ( getTypeBarriere ( value, AUTRE ),  AUTRE );
 			break;
 
 		// Car parked at spot <value> now wants to leave
