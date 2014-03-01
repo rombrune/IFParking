@@ -102,12 +102,10 @@ static Car waitForCar ( TypeBarriere entrance )
 	// Read from the mailbox
 	int key = ftok ( EXEC_NAME, KEY );
 	int mailboxId = msgget ( key, IPC_EXCL );
-
-	// This call will wait until it can withdraw a message from the mailbox
-	// TODO: test for failure? (e.g. interrupted by a signal)
 	int size = sizeof ( CarRequest ) - sizeof ( long );
 	int status;
-	// Restart this system call as long as we really have not received a car
+	// Restart this system call as long as we really have not 
+	// actually received a car
 	// (it could very well be interrupted by a signal)
 	do
 	{
@@ -147,6 +145,11 @@ void Entrance ( TypeBarriere entrance )
 		pid_t valetPid = GarerVoiture ( entrance );
 		currentValets[valetPid] = next;
 
-		sleep ( ENTRANCE_SLEEP_DELAY );
+		// TODO: check that at least ENTRANCE_SLEEP_DELAY time is slept
+		unsigned int remaining = ENTRANCE_SLEEP_DELAY;
+		while ( remaining > 0 )
+		{
+			remaining = sleep ( remaining );
+		}
 	}
 } // Fin de Entrance
