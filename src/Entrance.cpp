@@ -44,11 +44,10 @@ static void ack ( int signalNumber )
 	// For each child task that has died
 	while ( (pid = waitpid ( -1, &status, WNOHANG )) != - 1 )
 	{
-		if ( WIFEXITED ( status ) )
+		if ( pid != 0 && WIFEXITED ( status ) )
 		{
 			// Retrieve the spot number (encoded into the return value)
 			int spotNumber = WEXITSTATUS ( status );
-
 			Car car = currentValets[pid];
 			car.entranceTime = time ( NULL );
 
@@ -66,6 +65,14 @@ static void die ( int signalNumber )
 // Mode d'emploi :
 // Use for controlled destruction. Kills any child task.
 {
+	// Mask SIGCHLD
+	struct sigaction action;
+	action.sa_handler = SIG_IGN;
+	sigemptyset ( &action.sa_mask );
+	action.sa_flags = 0;
+	sigaction ( SIGCHLD, &action, NULL );
+
+	// Kill every running GarerVoiture
 	for ( map<pid_t, Car>::iterator it = currentValets.begin();
 			it != currentValets.end(); ++it )
 	{
@@ -139,7 +146,8 @@ void Entrance ( TypeBarriere entrance )
 	for ( ; ; )
 	{
 		Car next = waitForCar ( entrance );
-
+		if ( next.licensePlate == -1 )
+			cout << "ERROR: invalid car received!" << endl;
 		// TODO: check that it can indeed park and place request if necessary
 
 		pid_t valetPid = GarerVoiture ( entrance );
