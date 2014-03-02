@@ -9,6 +9,7 @@
 /////////////////////////////////////////////////////////////////  INCLUDE
 //-------------------------------------------------------- Include système
 #include <cstdlib>
+#include <signal.h>
 #include <sys/sem.h>
 #include <sys/shm.h>
 //------------------------------------------------------ Include personnel
@@ -38,6 +39,20 @@ static void semOperation ( int key, short semIndex, short semOp )
 
 //////////////////////////////////////////////////////////////////  PUBLIC
 //---------------------------------------------------- Fonctions publiques
+void SetSignalHandler ( int signalNumber, void (*handler) (int) )
+{
+	struct sigaction action;
+	action.sa_handler = handler;
+	sigemptyset ( &action.sa_mask );
+	action.sa_flags = 0;
+	sigaction ( signalNumber, &action, NULL );
+}
+
+void MaskSignal ( int signalNumber )
+{
+	SetSignalHandler ( signalNumber, SIG_IGN );
+}
+
 void WaitForEnd ( pid_t pid )
 {
 	while ( -1 == waitpid ( pid, NULL, 0 ) )

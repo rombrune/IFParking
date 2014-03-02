@@ -96,6 +96,14 @@ struct State {
 
 //////////////////////////////////////////////////////////////////  PUBLIC
 //---------------------------------------------------- Fonctions publiques
+void SetSignalHandler ( int signalNumber, void (*handler) (int) );
+// Mode d'emploi :
+// Set the signal handler for the given signal
+// with default options.
+
+void MaskSignal ( int signalNumber );
+// Mode d'emploi :
+// Mask the given signal (i.e. set its handler to SIG_IGN)
 
 void WaitForEnd ( pid_t pid );
 // Mode d'emploi :

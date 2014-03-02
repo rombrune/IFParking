@@ -48,11 +48,7 @@ static void init ( )
 // No other task can start before this function has been called.
 {
 	// By default, mask SIGUSR2 signal
-	struct sigaction action;
-	sigemptyset ( &action.sa_mask );
-	action.sa_handler = SIG_IGN;
-	action.sa_flags = 0;
-	sigaction ( SIGUSR2, &action, NULL );
+	MaskSignal ( SIGUSR2 );
 
 	// TODO: check that permissions are as tight as possible
 	int permissions = 0600;
@@ -154,11 +150,7 @@ int main ( int argc, const char * argv[] )
 
 		// ---------- DESTRUCTION
 		// From now on, handle SIGCHLD for normal process end sync
-		struct sigaction action;
-		sigemptyset ( &action.sa_mask );
-		action.sa_handler = ack;
-		action.sa_flags = 0;
-		sigaction ( SIGCHLD, &action, NULL );
+		SetSignalHandler ( SIGCHLD, ack );
 
 		// Kill every created process in reverse order
 		kill ( hourPid, SIGUSR2 );

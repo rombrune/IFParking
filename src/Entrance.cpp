@@ -11,7 +11,6 @@
 #include <cstdlib>
 #include <time.h>
 #include <unistd.h>
-#include <signal.h>
 #include <sys/wait.h>
 #include <sys/msg.h>
 #include <errno.h>
@@ -79,12 +78,7 @@ static void die ( int signalNumber )
 // Mode d'emploi :
 // Use for controlled destruction. Kills any child task.
 {
-	// Mask SIGCHLD
-	struct sigaction action;
-	action.sa_handler = SIG_IGN;
-	sigemptyset ( &action.sa_mask );
-	action.sa_flags = 0;
-	sigaction ( SIGCHLD, &action, NULL );
+	MaskSignal ( SIGCHLD );
 
 	// Kill every running GarerVoiture
 	for ( map<pid_t, Car>::iterator it = currentValets.begin();
@@ -99,15 +93,10 @@ static void die ( int signalNumber )
 static void init ( )
 {
 	// Respond to SIGUSR2 (= controlled destruction)
-	struct sigaction action;
-	action.sa_handler = die;
-	sigemptyset ( &action.sa_mask );
-	action.sa_flags = 0;
-	sigaction ( SIGUSR2, &action, NULL );
+	SetSignalHandler ( SIGUSR2, die );
 
 	// Respond to SIGCHLD (= valet has finished parking car)
-	action.sa_handler = ack;
-	sigaction ( SIGCHLD, &action, NULL );
+	SetSignalHandler ( SIGCHLD, ack );
 } // Fin de init
 
 static Car waitForCar ( TypeBarriere entrance )
