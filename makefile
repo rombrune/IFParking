@@ -18,7 +18,7 @@ SRCDIR=src
 OUTPUTDIR=bin
 EXE=parking
 
-FILES= common.h KeyboardManagement.h Entrance.h
+FILES= common.h KeyboardManagement.h Entrance.h ExitGate.h
 
 HEADERS=$(addprefix $(SRCDIR)/,$(FILES))
 IMPL=$(HEADERS:.h=.cpp)

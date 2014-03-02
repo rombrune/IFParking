@@ -1,6 +1,6 @@
 //---------- Interface du module <common> (fichier common.h) ---------
-#if ! defined ( CONFIG_H )
-#define CONFIG_H
+#if ! defined ( COMMON_H )
+#define COMMON_H
 
 //------------------------------------------------------------------------
 // Rôle de l'interface <common>
@@ -111,4 +111,4 @@ void MutexRelease ( int key );
 // A semaphore buffer with 1 semaphore has been initialized
 // with the given key.
 
-#endif // CONFIG_H
+#endif // COMMON_H

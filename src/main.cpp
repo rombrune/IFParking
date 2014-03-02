@@ -17,11 +17,12 @@
 #include <signal.h>
 //------------------------------------------------------ Include personnel
 #include "Outils.h"
+#include "Heure.h"
 
 #include "common.h"
-#include "Heure.h"
-#include "KeyboardManagement.h"
 #include "Entrance.h"
+#include "ExitGate.h"
+#include "KeyboardManagement.h"
 ///////////////////////////////////////////////////////////////////  PRIVE
 //------------------------------------------------------------- Constantes
 
@@ -102,7 +103,7 @@ int main ( int argc, const char * argv[] )
 	pid_t keyboardManagementPid;
 	pid_t hourPid;
 	pid_t entrance1Pid, entrance2Pid, entrance3Pid;
-
+	pid_t exitGatePid;
 
 	// ---------- INITIALIZATION
 	InitialiserApplication( XTERM );
@@ -122,6 +123,10 @@ int main ( int argc, const char * argv[] )
 	{
 		Entrance ( ENTREE_GASTON_BERGER );
 	}
+	else if ( (exitGatePid = fork()) == 0 )
+	{
+		ExitGate ( );
+	}
 	else if ( (keyboardManagementPid = fork()) == 0 )
 	{
 		KeyboardManagement ( );
@@ -130,14 +135,7 @@ int main ( int argc, const char * argv[] )
 	{
 		hourPid = ActiverHeure ( );
 
-		// Wait for the user to quit the application
-		// The call could be interrupted by a received signal.
-		// But since we really want to wait, we relauch it every
-		// time that happens.
-		while ( -1 == waitpid ( keyboardManagementPid, NULL, 0 ) )
-		{
-			// Empty
-		}
+		WaitForEnd ( keyboardManagementPid );
 
 		// ---------- DESTRUCTION
 		// From now on, handle SIGCHLD for normal process end sync
@@ -149,6 +147,7 @@ int main ( int argc, const char * argv[] )
 
 		// Kill every created process in reverse order
 		kill ( hourPid, SIGUSR2 );
+		kill ( exitGatePid, SIGUSR2 );
 		kill ( entrance3Pid, SIGUSR2 );
 		kill ( entrance2Pid, SIGUSR2 );
 		kill ( entrance1Pid, SIGUSR2 );
