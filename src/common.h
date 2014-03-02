@@ -62,15 +62,20 @@ struct Car {
 struct CarRequest {
 	// Message type (one type per entrance)
 	long type;
+	// Car that wants to enter
 	Car car;
+	// Time at which the request is submitted
+	time_t date;
+	// pid of the process that submitted the request
+	pid_t pid;
 
-	CarRequest ( TypeBarriere t, Car c )
-		: type ( t ), car ( c )
+	CarRequest ( TypeBarriere t, Car c, time_t d, pid_t p )
+		: type ( t ), car ( c ), date ( d ), pid ( p )
 	{
 		// Empty
 	}
 	CarRequest ( )
-		: type ( AUCUNE )
+		: type ( AUCUNE ), date ( 0 )
 	{
 		// Empty
 	}
@@ -80,8 +85,10 @@ struct CarRequest {
 // the current state of the parking lot
 // For use in the shared memory
 struct State {
-	// Number of free spots
-	int freeSpots;
+	// Spots
+	int freeSpotsNumber;
+	bool isFree [ NB_PLACES ];
+	Car spots [ NB_PLACES ];
 	// Requests currently posted
 	int requestsNumber;
 	CarRequest requests [ NB_BARRIERES_ENTREE ];

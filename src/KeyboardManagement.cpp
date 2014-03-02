@@ -58,7 +58,7 @@ static void queueCar ( TypeBarriere entrance, TypeUsager priority )
 	// Prepare the message
 	// The message type indicates the entrance
 	Car car ( priority );
-	CarRequest message ( entrance, car );
+	CarRequest message ( entrance, car, time ( NULL ), getpid ( ) );
 
 	// Insert it into the mailbox
 	int mailboxId = msgget ( KEY, IPC_EXCL );
