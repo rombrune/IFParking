@@ -87,7 +87,6 @@ struct CarRequest {
 struct State {
 	// Spots
 	int freeSpotsNumber;
-	bool isFree [ NB_PLACES ];
 	Car spots [ NB_PLACES ];
 	// Requests currently posted
 	int requestsNumber;

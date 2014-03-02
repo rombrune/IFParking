@@ -15,9 +15,6 @@
 #include <sys/msg.h>
 #include <errno.h>
 #include <map>
-#include <iostream> 
-// TODO: remove ^
-using namespace std;
 //------------------------------------------------------ Include personnel
 #include "Outils.h"
 
@@ -42,7 +39,6 @@ static void placeCar ( unsigned int spotNumber, Car car )
 // to set <spotNumber> to the given car
 {
 	State * state = ObtainSharedState ( );
-	state->isFree[spotNumber - 1] = false;
 	state->spots[spotNumber - 1] = car;
 	ReleaseSharedState ( state );
 } // Fin de placeCar

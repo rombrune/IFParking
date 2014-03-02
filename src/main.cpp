@@ -63,10 +63,6 @@ static void init ( )
 	// Set the initial state of the parking lot
 	State * state = (State *)shmat ( sharedMemId, NULL, 0 );
 	state->freeSpotsNumber = NB_PLACES;
-	for (unsigned int i = 0; i < NB_PLACES; ++i)
-	{
-		state->isFree[i] = true;
-	}
 	state->requestsNumber = 0;
 	shmdt ( state );
 

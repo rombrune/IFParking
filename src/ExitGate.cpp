@@ -15,9 +15,6 @@
 #include <sys/wait.h>
 #include <errno.h>
 #include <map>
-#include <iostream> 
-// TODO: remove ^
-using namespace std;
 //------------------------------------------------------ Include personnel
 #include "Outils.h"
 
@@ -41,7 +38,6 @@ static void removeCar ( unsigned int spotNumber )
 // to set <spotNumber> to empty
 {
 	State * state = ObtainSharedState ( );
-	state->isFree[spotNumber - 1] = true;
 	state->spots[spotNumber - 1].licensePlate = -1;
 	ReleaseSharedState ( state );
 
@@ -208,26 +204,18 @@ static void init ( )
 	SetSignalHandler ( SIGCHLD, ack );
 } // Fin de init
 
-static bool getCarAt ( unsigned int spotNumber, Car * car )
+static Car getCarAt ( unsigned int spotNumber )
 // Mode d'emploi :
 // Retrieves the car at the given spot number in the shared memory.
 // Writes the retrieved car in <car> if <car> is not NULL.
 // Return false if there is no car at this spot.
+// Contrat :
+// There is indeed a car parked at this spot.
 {
 	State * state = ObtainSharedState ( );
-	
-	bool found = true;
-	if ( state->isFree[spotNumber - 1] )
-	{
-		found = false;
-	}
-	else if ( car != NULL )
-	{
-		(*car) = state->spots[spotNumber - 1];
-	}
-
+	Car car = state->spots[spotNumber - 1];
 	ReleaseSharedState ( state );
-	return found;
+	return car;
 }
 
 //////////////////////////////////////////////////////////////////  PUBLIC
@@ -260,19 +248,13 @@ void ExitGate ( int pipeR, int pipeW )
 			}
 		}
 
-		if ( spotNumber > 0 && spotNumber <= NB_PLACES )
+		pid_t valetPid = SortirVoiture ( spotNumber );
+		if ( valetPid != -1 )
 		{
 			// Find the corresponding car in the state of the parking lot
-			Car car;
-			bool hasCar = getCarAt ( spotNumber, &car );
-			if ( hasCar )
-			{
-				pid_t valetPid = SortirVoiture ( spotNumber );
-				currentValets[valetPid] = car;
-
-				// The parking spot is effectively freed up
-				// when the valet returns.
-			}
+			currentValets[valetPid] = getCarAt ( spotNumber );
+			// The parking spot is effectively freed up
+			// when the valet returns.
 		}
 	}
 } // Fin de ExitGate
