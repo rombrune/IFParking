@@ -163,7 +163,7 @@ static void decrementFreeSpots ( )
 
 	shmdt ( state );
 	MutexRelease ( KEY );
-}
+} // Fin de decrementFreeSpots
 
 static void placeRequest ( TypeBarriere entrance, Car car )
 // Contrat :
@@ -184,7 +184,7 @@ static void placeRequest ( TypeBarriere entrance, Car car )
 
 	// Display this new request
 	AfficherRequete ( entrance, car.priority, time ( NULL ) );
-}
+} // Fin de placeRequest
 
 //////////////////////////////////////////////////////////////////  PUBLIC
 //---------------------------------------------------- Fonctions publiques

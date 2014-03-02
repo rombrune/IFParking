@@ -13,7 +13,6 @@
 #include <unistd.h>
 #include <signal.h>
 #include <sys/wait.h>
-#include <sys/msg.h>
 #include <sys/shm.h>
 #include <errno.h>
 #include <map>
@@ -41,7 +40,24 @@ static void ack ( int signalNumber )
 // Mode d'emploi :
 // Acknowledges the death of a child SortirVoiture task.
 {
-	// TODO
+	// Retrieve the pid of the terminated child
+	int status;
+	pid_t pid;
+	// For each child task that has died
+	while ( (pid = waitpid ( -1, &status, WNOHANG )) != - 1 )
+	{
+		if ( pid != 0 && WIFEXITED ( status ) )
+		{
+			Car car = currentValets[pid];
+
+			// Remove this pid from the list of running tasks
+			currentValets.erase ( pid );
+
+			// Display the newly parked car
+			AfficherSortie ( car.priority, car.licensePlate,
+							car.entranceTime, time ( NULL ) );
+		}
+	}
 } // Fin de ack
 
 static void die ( int signalNumber )
@@ -79,6 +95,20 @@ static void init ( )
 	sigaction ( SIGCHLD, &action, NULL );
 } // Fin de init
 
+static void incrementFreeSpots ( )
+{
+	MutexTake ( KEY );
+
+	size_t size = sizeof ( State );
+	int sharedMemId = shmget ( KEY, size, IPC_EXCL );
+	State * state = (State *)shmat ( sharedMemId, NULL, 0 );
+	
+	state->freeSpots++;
+
+	shmdt ( state );
+	MutexRelease ( KEY );
+} // Fin de incrementFreeSpots
+
 //////////////////////////////////////////////////////////////////  PUBLIC
 //---------------------------------------------------- Fonctions publiques
 void ExitGate ( int pipeR, int pipeW )
@@ -97,8 +127,29 @@ void ExitGate ( int pipeR, int pipeW )
 	for ( ; ; )
 	{
 		unsigned int spotNumber = -1;
-		read ( PipeRead, &spotNumber, sizeof (unsigned int) );
+		ssize_t sizeRead = 0;
+		// Keep reading even when interrupted by a signal
+		while ( sizeRead < sizeof ( unsigned int) )
+		{
+			ssize_t s;
+			s = read ( PipeRead, &spotNumber, sizeof (unsigned int) );
+			if ( s > 0 )
+			{
+				sizeRead += s;
+			}
+		}
 
-		cout << "New exit request: " << spotNumber << endl;
+		if ( spotNumber > 0 && spotNumber <= NB_PLACES )
+		{
+			incrementFreeSpots ( );
+			pid_t valetPid = SortirVoiture ( spotNumber );
+			// TODO: find the corresponding car in the state of the parking lot
+			Car car;
+			currentValets[valetPid] = car;
+
+			// Now that a new spot has freed up,
+			// we check if there's any open request from the entrances
+			// TODO
+		}
 	}
 } // Fin de ExitGate
