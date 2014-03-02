@@ -84,12 +84,6 @@ struct State {
 	int freeSpots;
 	// Requests currently posted
 	std::vector<CarRequest> requests;
-
-	State ( )
-		: freeSpots ( NB_PLACES )
-	{
-		// Empty
-	}
 };
 
 //////////////////////////////////////////////////////////////////  PUBLIC

@@ -60,9 +60,10 @@ static void init ( )
 	size_t size = sizeof ( State );
 	int sharedMemId = shmget ( KEY, size, (IPC_CREAT|IPC_EXCL|permissions) );
 
-	// Test
+	// Place the initial state of the parking lot
 	State * state = (State *)shmat ( sharedMemId, NULL, 0 );
-	state->freeSpots = 2;
+	state->freeSpots = NB_PLACES;
+	state->requests.clear ( );
 	shmdt ( state );
 
 	// Create the shared memory mutex

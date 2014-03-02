@@ -14,6 +14,7 @@
 #include <signal.h>
 #include <sys/wait.h>
 #include <sys/msg.h>
+#include <sys/shm.h>
 #include <errno.h>
 #include <map>
 #include <iostream> 
@@ -127,6 +128,43 @@ static Car waitForCar ( TypeBarriere entrance )
 	return message.car;
 } // Fin de waitForCar
 
+static bool canGoIn ( )
+// Mode d'emploi :
+// Checks in the parking lot state (shared memory)
+// to see if we can send a car in right away, or if we should
+// rather place a request and wait to be signaled.
+{
+	bool allowed = true;
+	MutexTake ( KEY );
+
+	size_t size = sizeof ( State );
+	int sharedMemId = shmget ( KEY, size, IPC_EXCL );
+	State * state = (State *)shmat ( sharedMemId, NULL, 0 );
+	
+	if ( state->requests.size() >= state->freeSpots )
+	{
+		allowed = false;
+	}
+
+	shmdt ( state );
+	MutexRelease ( KEY );
+	return allowed;
+}
+
+static void decrementFreeSpots ( )
+{
+	MutexTake ( KEY );
+
+	size_t size = sizeof ( State );
+	int sharedMemId = shmget ( KEY, size, IPC_EXCL );
+	State * state = (State *)shmat ( sharedMemId, NULL, 0 );
+	
+	state->freeSpots--;
+
+	shmdt ( state );
+	MutexRelease ( KEY );
+}
+
 //////////////////////////////////////////////////////////////////  PUBLIC
 //---------------------------------------------------- Fonctions publiques
 void Entrance ( TypeBarriere entrance )
@@ -149,9 +187,17 @@ void Entrance ( TypeBarriere entrance )
 			cout << "ERROR: invalid car received!" << endl;
 		// TODO: check that it can indeed park and place request if necessary
 
-		pid_t valetPid = GarerVoiture ( entrance );
-		currentValets[valetPid] = next;
-
+		if ( canGoIn ( ) )
+		{
+			decrementFreeSpots ( );
+			pid_t valetPid = GarerVoiture ( entrance );
+			currentValets[valetPid] = next;
+		}
+		else
+		{
+			// TODO: place request and wait to be signaled
+			die ( 0 );
+		}
 		// TODO: check that at least ENTRANCE_SLEEP_DELAY time is slept
 		unsigned int remaining = ENTRANCE_SLEEP_DELAY;
 		while ( remaining > 0 )
