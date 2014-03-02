@@ -63,7 +63,7 @@ static void init ( )
 	// Place the initial state of the parking lot
 	State * state = (State *)shmat ( sharedMemId, NULL, 0 );
 	state->freeSpots = NB_PLACES;
-	state->requests.clear ( );
+	state->requestsNumber = 0;
 	shmdt ( state );
 
 	// Create the shared memory mutex

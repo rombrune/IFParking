@@ -141,7 +141,7 @@ static bool canGoIn ( )
 	int sharedMemId = shmget ( KEY, size, IPC_EXCL );
 	State * state = (State *)shmat ( sharedMemId, NULL, 0 );
 	
-	if ( state->requests.size() >= state->freeSpots )
+	if ( state->requestsNumber >= state->freeSpots )
 	{
 		allowed = false;
 	}
@@ -160,6 +160,24 @@ static void decrementFreeSpots ( )
 	State * state = (State *)shmat ( sharedMemId, NULL, 0 );
 	
 	state->freeSpots--;
+
+	shmdt ( state );
+	MutexRelease ( KEY );
+}
+
+static void placeRequest ( TypeBarriere entrance, Car car )
+// Contrat :
+// 0 <= entrance < NB_BARRIERES_ENTREES
+{
+	MutexTake ( KEY );
+
+	size_t size = sizeof ( State );
+	int sharedMemId = shmget ( KEY, size, IPC_EXCL );
+	State * state = (State *)shmat ( sharedMemId, NULL, 0 );
+	
+	CarRequest request ( entrance, car );
+	state->requests[entrance - 1] = request;
+	state->requestsNumber++;
 
 	shmdt ( state );
 	MutexRelease ( KEY );
@@ -196,6 +214,7 @@ void Entrance ( TypeBarriere entrance )
 		else
 		{
 			// TODO: place request and wait to be signaled
+			placeRequest ( entrance, next );
 			die ( 0 );
 		}
 		// TODO: check that at least ENTRANCE_SLEEP_DELAY time is slept

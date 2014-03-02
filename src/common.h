@@ -11,7 +11,6 @@
 /////////////////////////////////////////////////////////////////  INCLUDE
 //--------------------------------------------------- Interfaces utilisées
 #include <time.h>
-#include <vector>
 
 #include "Outils.h"
 
@@ -83,7 +82,8 @@ struct State {
 	// Number of free spots
 	int freeSpots;
 	// Requests currently posted
-	std::vector<CarRequest> requests;
+	int requestsNumber;
+	CarRequest requests [ NB_BARRIERES_ENTREE ];
 };
 
 //////////////////////////////////////////////////////////////////  PUBLIC
