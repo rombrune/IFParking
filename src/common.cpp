@@ -10,6 +10,7 @@
 //-------------------------------------------------------- Include système
 #include <cstdlib>
 #include <signal.h>
+#include <errno.h>
 #include <sys/sem.h>
 #include <sys/shm.h>
 //------------------------------------------------------ Include personnel
@@ -33,8 +34,19 @@ static void semOperation ( int key, short semIndex, short semOp )
 	operation.sem_op = 1;
 	operation.sem_flg = 0;
 	
-	// TODO: restart if interrupted by a signal
-	semop ( semId, &operation, 1 );
+	int status;
+	do
+	{
+		// Keep trying even if interrupted by a signal
+		status = semop ( semId, &operation, 1 );
+
+		// Unhandled error case 
+		// (better crash than risk corrupting everything)
+		if ( status == -1 && errno != EINTR )
+		{
+			exit ( errno );
+		}
+	} while ( status == -1 );
 } // Fin de semOperation
 
 //////////////////////////////////////////////////////////////////  PUBLIC
@@ -55,10 +67,19 @@ void MaskSignal ( int signalNumber )
 
 void WaitForEnd ( pid_t pid )
 {
-	while ( -1 == waitpid ( pid, NULL, 0 ) )
+	int status;
+	do
 	{
-		// Empty
-	}
+		// Keep waiting even if interrupted by a signal
+		status = waitpid ( pid, NULL, 0 );
+
+		// Unhandled error case 
+		// (better crash than risk corrupting everything)
+		if ( status == -1 && errno != EINTR )
+		{
+			exit ( errno );
+		}
+	} while ( status == -1 );
 }
 
 void MutexTake ( int key )
