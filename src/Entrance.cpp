@@ -213,8 +213,8 @@ void Entrance ( TypeBarriere entrance )
 		}
 		else
 		{
-			// TODO: place request and wait to be signaled
 			placeRequest ( entrance, next );
+			// Wait to be signaled (SIGUSR1)
 			die ( 0 );
 		}
 		// TODO: check that at least ENTRANCE_SLEEP_DELAY time is slept

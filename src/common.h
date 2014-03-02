@@ -11,6 +11,7 @@
 /////////////////////////////////////////////////////////////////  INCLUDE
 //--------------------------------------------------- Interfaces utilisées
 #include <time.h>
+#include <sys/wait.h>
 
 #include "Outils.h"
 
@@ -88,6 +89,13 @@ struct State {
 
 //////////////////////////////////////////////////////////////////  PUBLIC
 //---------------------------------------------------- Fonctions publiques
+
+void WaitForEnd ( pid_t pid );
+// Mode d'emploi :
+// Wait for the process corresponding to <pid> to return.
+// Keep waiting even if the call gets interrupted by a signal.
+// Contrat :
+// <pid> corresponds to a process that is running or has run.
 
 void MutexTake ( int key );
 // Mode d'emploi :

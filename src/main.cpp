@@ -42,6 +42,8 @@ static void ack ( int signalNumber )
 } // Fin de ack
 
 static void init ( )
+// Contrat :
+// No other task can start before this function has been called.
 {
 	// By default, mask SIGUSR2 signal
 	struct sigaction action;
@@ -60,7 +62,7 @@ static void init ( )
 	size_t size = sizeof ( State );
 	int sharedMemId = shmget ( KEY, size, (IPC_CREAT|IPC_EXCL|permissions) );
 
-	// Place the initial state of the parking lot
+	// Set the initial state of the parking lot
 	State * state = (State *)shmat ( sharedMemId, NULL, 0 );
 	state->freeSpots = NB_PLACES;
 	state->requestsNumber = 0;

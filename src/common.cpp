@@ -37,6 +37,14 @@ static void semOperation ( int key, short semIndex, short semOp )
 
 //////////////////////////////////////////////////////////////////  PUBLIC
 //---------------------------------------------------- Fonctions publiques
+void WaitForEnd ( pid_t pid )
+{
+	while ( -1 == waitpid ( pid, NULL, 0 ) )
+	{
+		// Empty
+	}
+}
+
 void MutexTake ( int key )
 {
 	semOperation ( key, 0, -1 );
