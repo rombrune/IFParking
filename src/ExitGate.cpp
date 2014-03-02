@@ -99,10 +99,10 @@ static bool processRequests ( )
 	
 	bool hasRequest = (state->requestsNumber > 0);
 	CarRequest prioritary;
+	int index = 0;
 	if ( hasRequest )
 	{
 		// Find the most prioritary request
-		int index = 0;
 		for (int i = 1; i < NB_BARRIERES_ENTREE; ++i )
 		{
 			if ( comparePriority ( state->requests[i], 
@@ -124,8 +124,9 @@ static bool processRequests ( )
 	if ( hasRequest )
 	{
 		// Signal the corresponding entrance
-		cout << "Signaling entrance: " << prioritary.pid << endl;
-		kill ( SIGUSR1, prioritary.pid );
+		kill ( prioritary.pid, SIGUSR1 );
+		// Un-show the request
+		Effacer ( TypeZone ( REQUETE_R1 + index ) );
 	}
 
 	return hasRequest;

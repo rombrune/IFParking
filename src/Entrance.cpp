@@ -31,6 +31,9 @@ using namespace std;
 //---------------------------------------------------- Variables statiques
 // A map to hold the currently running GarerVoiture tasks
 static map<pid_t, Car> currentValets;
+// A flag to record the authorization to let a car from the exit gate
+// (set in the SIGUSR1 signal handler)
+static bool authorizationReceived;
 
 //------------------------------------------------------ Fonctions privées
 static void placeCar ( unsigned int spotNumber, Car car )
@@ -92,9 +95,9 @@ static void die ( int signalNumber )
 
 static void init ( )
 {
+	MaskSignal ( SIGUSR1 );
 	// Respond to SIGUSR2 (= controlled destruction)
 	SetSignalHandler ( SIGUSR2, die );
-
 	// Respond to SIGCHLD (= valet has finished parking car)
 	SetSignalHandler ( SIGCHLD, ack );
 } // Fin de init
@@ -168,6 +171,14 @@ static void placeRequest ( TypeBarriere entrance, Car car )
 	AfficherRequete ( entrance, car.priority, now );
 } // Fin de placeRequest
 
+static void authorize ( int signalNumber )
+// Mode d'emploi :
+// This signal handler is called when the exit gate
+// allows us to let our car in
+{
+	authorizationReceived = true;
+}
+
 //////////////////////////////////////////////////////////////////  PUBLIC
 //---------------------------------------------------- Fonctions publiques
 void Entrance ( TypeBarriere entrance )
@@ -191,13 +202,19 @@ void Entrance ( TypeBarriere entrance )
 		// and wait patiently to be signaled by the exit gate
 		if ( ! canGoIn ( ) )
 		{
+			authorizationReceived = false;
 			placeRequest ( entrance, next );
-			// TODO: wait to be signaled
-			die ( 0 );
+			
+			SetSignalHandler ( SIGUSR1, authorize );
+			while ( !authorizationReceived )
+			{
+				pause ( );
+			}
+			MaskSignal ( SIGUSR1 );
 		}
 		
 		// Allow the car to go in
-		decrementFreeSpots ( );
+		decrementFreeSpots ( ); // TODO: not always necessary
 		pid_t valetPid = GarerVoiture ( entrance );
 		currentValets[valetPid] = next;
 		
