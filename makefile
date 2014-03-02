@@ -18,7 +18,7 @@ SRCDIR=src
 OUTPUTDIR=bin
 EXE=parking
 
-FILES= config.h KeyboardManagement.h Entrance.h
+FILES= common.h KeyboardManagement.h Entrance.h
 
 HEADERS=$(addprefix $(SRCDIR)/,$(FILES))
 IMPL=$(HEADERS:.h=.cpp)
@@ -39,7 +39,7 @@ $(EXE): $(OBJ)
 	$(LINKER) $(LINKERFLAGS) $(INCPATH) $(LIBPATH) -o $(OUTPUTDIR)/$(EXE) $(OBJ) $(LIBS)
 
 # Generic rule
-$(OUTPUTDIR)/%.o: $(SRCDIR)/%.cpp $(SRCDIR)/config.h
+$(OUTPUTDIR)/%.o: $(SRCDIR)/%.cpp $(SRCDIR)/common.h
 	$(ECHO) Compiling $<...
 	$(COMPILER) $(CPPFLAGS) $(INCPATH) -o $@ -c $<
 

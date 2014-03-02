@@ -16,7 +16,7 @@
 //------------------------------------------------------ Include personnel
 #include "Outils.h"
 
-#include "config.h"
+#include "common.h"
 #include "Heure.h"
 #include "KeyboardManagement.h"
 #include "Entrance.h"
@@ -49,17 +49,17 @@ static void init ( )
 	sigaction ( SIGUSR2, &action, NULL );
 
 	// TODO: check that permissions are as tight as possible
-	
+	int permissions = 0600;
+
 	// Create the mailbox (KeyboardManagement => Entrances)
-	int key = ftok(EXEC_NAME, KEY);
-	int mailboxId = msgget ( key, (IPC_CREAT|IPC_EXCL|0600) );
+	int mailboxId = msgget ( KEY, (IPC_CREAT|IPC_EXCL|permissions) );
 } // Find de init
 
 static void destroy ( )
 {
+
 	// Free the mailbox
-	int key = ftok(EXEC_NAME, KEY);
-	int mailboxId = msgget ( key, IPC_EXCL );
+	int mailboxId = msgget ( KEY, IPC_EXCL );
 	msgctl ( mailboxId, IPC_RMID, 0 );
 } // Fin de destroy
 

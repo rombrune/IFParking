@@ -1,11 +1,11 @@
-//---------- Interface du module <config> (fichier config.h) ---------
+//---------- Interface du module <common> (fichier common.h) ---------
 #if ! defined ( CONFIG_H )
 #define CONFIG_H
 
 //------------------------------------------------------------------------
-// Rôle de l'interface <config>
-// This header file makes available common constants and types.
-//
+// Rôle de l'interface <common>
+// This module makes available common constants and types, as well as
+// useful functions.
 //------------------------------------------------------------------------
 
 /////////////////////////////////////////////////////////////////  INCLUDE
@@ -18,7 +18,9 @@
 //------------------------------------------------------------- Constantes
 // For use with ftok
 #define EXEC_NAME "parking"
-#define KEY 3
+#define KEY_NUMBER 3
+extern int const KEY;
+
 // Number of seconds to sleep right after letting a car enter
 #define ENTRANCE_SLEEP_DELAY 1
 
@@ -86,9 +88,6 @@ struct State {
 	State ( )
 		: freeSpots ( NB_PLACES )
 	{
-
+		// Empty
 	}
 };
-
-#endif // CONFIG_H
-
