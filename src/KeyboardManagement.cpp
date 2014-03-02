@@ -9,6 +9,7 @@
 /////////////////////////////////////////////////////////////////  INCLUDE
 //-------------------------------------------------------- Include système
 #include <cstdlib>
+#include <unistd.h>
 #include <sys/msg.h>
 //------------------------------------------------------ Include personnel
 #include "Outils.h"
@@ -22,11 +23,12 @@
 //------------------------------------------------------------------ Types
 
 //---------------------------------------------------- Variables statiques
+static int PipeWrite;
 
 //------------------------------------------------------ Fonctions privées
 static TypeBarriere getTypeBarriere ( int entranceNumber, TypeUsager priority )
 // Mode d'emploi :
-// Returns the TypeBarriere corresponding to the given entrance number.
+// Return the TypeBarriere corresponding to the given entrance number.
 // Contrat :
 // 1 <= entranceNumber <= 2 
 {
@@ -49,7 +51,7 @@ static TypeBarriere getTypeBarriere ( int entranceNumber, TypeUsager priority )
 
 static void queueCar ( TypeBarriere entrance, TypeUsager priority )
 // Mode d'emploi :
-// Adds a new car with the given priority at given entrance
+// Add a new car with the given priority at given entrance
 // Contrat :
 //
 {
@@ -65,10 +67,24 @@ static void queueCar ( TypeBarriere entrance, TypeUsager priority )
 	msgsnd ( mailboxId, &message, size, 0 );
 } // Fin de queueCar
 
+static void askExit ( unsigned int spotNumber )
+// Mode d'emploi :
+// Tells the ExitGate that the car currently parked at <spotNumber>
+// would like to go out of the parking lot.
+// Contrat :
+// 0 <= spotNumber <= NB_PLACES
+{
+	write ( PipeWrite, &spotNumber, sizeof ( unsigned int ) );
+}
+
 //////////////////////////////////////////////////////////////////  PUBLIC
 //---------------------------------------------------- Fonctions publiques
-void KeyboardManagement ( )
+void KeyboardManagement ( int pipeR, int pipeW )
 {
+	PipeWrite = pipeW;
+	// Close the unused end of the pipe
+	close ( pipeR );
+
 	for ( ; ; )
 	{
 		Menu ( );
@@ -95,7 +111,7 @@ void Commande ( char code, unsigned int value )
 
 		// Car parked at spot <value> now wants to leave
 		case 'S':
-			exit( 0 );
+			askExit ( value );
 			// Write to the exit gate through communication pipe
 			break;
 

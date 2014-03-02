@@ -29,6 +29,7 @@
 //------------------------------------------------------------------ Types
 
 //---------------------------------------------------- Variables statiques
+static int PipeRead, PipeWrite;
 
 //------------------------------------------------------ Fonctions privées
 static void ack ( int signalNumber )
@@ -75,6 +76,12 @@ static void init ( )
 	// (because the shared memory is initially accessible)
 	MutexRelease ( KEY );
 
+	// Create the pipe (KeyboardManagement => ExitGate)
+	int pipeFiles[2];
+	pipe ( pipeFiles );
+	PipeRead = pipeFiles[0];
+	PipeWrite = pipeFiles[1];
+
 } // Find de init
 
 static void destroy ( )
@@ -92,6 +99,10 @@ static void destroy ( )
 	// Free the shared memory mutex
 	int semId = semget ( KEY, 1, IPC_EXCL );
 	semctl ( semId, 0, IPC_RMID, 0);
+
+	// Free the pipe
+	close ( PipeRead );
+	close ( PipeWrite );
 
 } // Fin de destroy
 
@@ -125,11 +136,11 @@ int main ( int argc, const char * argv[] )
 	}
 	else if ( (exitGatePid = fork()) == 0 )
 	{
-		ExitGate ( );
+		ExitGate ( PipeRead, PipeWrite );
 	}
 	else if ( (keyboardManagementPid = fork()) == 0 )
 	{
-		KeyboardManagement ( );
+		KeyboardManagement ( PipeRead, PipeWrite );
 	}
 	else
 	{

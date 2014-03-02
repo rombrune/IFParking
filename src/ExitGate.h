@@ -24,8 +24,9 @@
 
 //////////////////////////////////////////////////////////////////  PUBLIC
 //---------------------------------------------------- Fonctions publiques
-void ExitGate ( );
+void ExitGate ( int pipeR, int pipeW );
 // Mode d'emploi :
-// 
+// <pipeR> and <pipeW> are the file descriptors of a previously opened
+// communication pipe.
 
 #endif // EXITGATE_H_

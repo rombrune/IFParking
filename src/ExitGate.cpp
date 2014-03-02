@@ -31,6 +31,8 @@ using namespace std;
 //------------------------------------------------------------------ Types
 
 //---------------------------------------------------- Variables statiques
+// The file descriptor of the communication pipe
+static int PipeRead;
 // A map to hold the currently running SortirVoiture tasks
 static map<pid_t, Car> currentValets;
 
@@ -79,7 +81,7 @@ static void init ( )
 
 //////////////////////////////////////////////////////////////////  PUBLIC
 //---------------------------------------------------- Fonctions publiques
-void ExitGate ( )
+void ExitGate ( int pipeR, int pipeW )
 // Algorithme :
 // 1. Wait for a spot number to be written 
 // in the communication pipe (from KeyboardManagement)
@@ -88,8 +90,15 @@ void ExitGate ( )
 {
 	init ( );
 
+	PipeRead = pipeR;
+	// Close the unused end of the pipe
+	close ( pipeW );
+
 	for ( ; ; )
 	{
-		// TODO
+		unsigned int spotNumber = -1;
+		read ( PipeRead, &spotNumber, sizeof (unsigned int) );
+
+		cout << "New exit request: " << spotNumber << endl;
 	}
 } // Fin de ExitGate

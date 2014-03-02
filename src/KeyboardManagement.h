@@ -23,11 +23,13 @@
 
 //////////////////////////////////////////////////////////////////  PUBLIC
 //---------------------------------------------------- Fonctions publiques
-void KeyboardManagement ( );
+void KeyboardManagement ( int pipeR, int pipeW );
 // Mode d'emploi :
 // Handles keyboard input and sends the appropriate command.
 // This procedure should be called in its own process, it only returns
 // when the user asks to quit the program.
+// <pipeR> and <pipeW> are the file descriptors of a previously opened
+// communication pipe.
 
 void Commande ( char code, unsigned int valeur );
 // Mode d'emploi :
