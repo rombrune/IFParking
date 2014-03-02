@@ -10,6 +10,7 @@
 //-------------------------------------------------------- Include système
 #include <cstdlib>
 #include <sys/sem.h>
+#include <sys/shm.h>
 //------------------------------------------------------ Include personnel
 #include "common.h"
 ///////////////////////////////////////////////////////////////////  PRIVE
@@ -53,3 +54,18 @@ void MutexRelease ( int key )
 {
 	semOperation ( key, 0, 1 );
 } // Fin de mutexRelease
+
+State * ObtainSharedState ( )
+{
+	MutexTake ( KEY );
+
+	size_t size = sizeof ( State );
+	int sharedMemId = shmget ( KEY, size, IPC_EXCL );
+	return (State *)shmat ( sharedMemId, NULL, 0 );
+}
+
+void ReleaseSharedState ( State * state )
+{
+	shmdt ( state );
+	MutexRelease ( KEY );
+}

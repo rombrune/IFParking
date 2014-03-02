@@ -13,7 +13,6 @@
 #include <unistd.h>
 #include <signal.h>
 #include <sys/wait.h>
-#include <sys/shm.h>
 #include <errno.h>
 #include <map>
 #include <iostream> 
@@ -41,17 +40,10 @@ static void removeCar ( unsigned int spotNumber )
 // Updates the state of the parking lot (in shared memory)
 // to set <spotNumber> to empty
 {
-	MutexTake ( KEY );
-
-	size_t size = sizeof ( State );
-	int sharedMemId = shmget ( KEY, size, IPC_EXCL );
-	State * state = (State *)shmat ( sharedMemId, NULL, 0 );
-	
+	State * state = ObtainSharedState ( );
 	state->isFree[spotNumber - 1] = true;
 	state->spots[spotNumber - 1].licensePlate = -1;
-
-	shmdt ( state );
-	MutexRelease ( KEY );
+	ReleaseSharedState ( state );
 
 	// Display this change
 	Effacer ( TypeZone ( ETAT_P1 + (spotNumber - 1) ) );
@@ -103,12 +95,7 @@ static bool processRequests ( )
 // signals the corresponding entrance that it can let its car in.
 // Return false if there was no pending request.
 {
-
-	MutexTake ( KEY );
-
-	size_t size = sizeof ( State );
-	int sharedMemId = shmget ( KEY, size, IPC_EXCL );
-	State * state = (State *)shmat ( sharedMemId, NULL, 0 );
+	State * state = ObtainSharedState ( );
 	
 	bool hasRequest = (state->requestsNumber > 0);
 	CarRequest prioritary;
@@ -132,8 +119,7 @@ static bool processRequests ( )
 
 	}
 	// We release the critical resource as fast as possible
-	shmdt ( state );
-	MutexRelease ( KEY );
+	ReleaseSharedState ( state );
 	
 	if ( hasRequest )
 	{
@@ -147,16 +133,9 @@ static bool processRequests ( )
 
 static void incrementFreeSpots ( )
 {
-	MutexTake ( KEY );
-
-	size_t size = sizeof ( State );
-	int sharedMemId = shmget ( KEY, size, IPC_EXCL );
-	State * state = (State *)shmat ( sharedMemId, NULL, 0 );
-	
+	State * state = ObtainSharedState ( );
 	state->freeSpotsNumber++;
-
-	shmdt ( state );
-	MutexRelease ( KEY );
+	ReleaseSharedState ( state );
 } // Fin de incrementFreeSpots
 
 
@@ -239,11 +218,7 @@ static bool getCarAt ( unsigned int spotNumber, Car * car )
 // Writes the retrieved car in <car> if <car> is not NULL.
 // Return false if there is no car at this spot.
 {
-	MutexTake ( KEY );
-
-	size_t size = sizeof ( State );
-	int sharedMemId = shmget ( KEY, size, IPC_EXCL );
-	State * state = (State *)shmat ( sharedMemId, NULL, 0 );
+	State * state = ObtainSharedState ( );
 	
 	bool found = true;
 	if ( state->isFree[spotNumber - 1] )
@@ -255,9 +230,7 @@ static bool getCarAt ( unsigned int spotNumber, Car * car )
 		(*car) = state->spots[spotNumber - 1];
 	}
 
-	shmdt ( state );
-	MutexRelease ( KEY );
-
+	ReleaseSharedState ( state );
 	return found;
 }
 

@@ -118,4 +118,18 @@ void MutexRelease ( int key );
 // A semaphore buffer with 1 semaphore has been initialized
 // with the given key.
 
+State * ObtainSharedState ( );
+// Mode d'emploi :
+// Take the mutex, attach to the shared memory, 
+// and return a pointer to the shared state of the parking lot.
+// Contrat :
+// ReleaseSharedState should be called as quickly as possible.
+
+void ReleaseSharedState ( State * state );
+// Mode d'emploi :
+// Detach from the shared memory and release the mutex.
+// Contrat :
+// <state> is the pointer returned 
+// by a previous call of ObtainSharedState.
+
 #endif // COMMON_H

@@ -14,7 +14,6 @@
 #include <signal.h>
 #include <sys/wait.h>
 #include <sys/msg.h>
-#include <sys/shm.h>
 #include <errno.h>
 #include <map>
 #include <iostream> 
@@ -40,17 +39,10 @@ static void placeCar ( unsigned int spotNumber, Car car )
 // Updates the state of the parking lot (in shared memory)
 // to set <spotNumber> to the given car
 {
-	MutexTake ( KEY );
-
-	size_t size = sizeof ( State );
-	int sharedMemId = shmget ( KEY, size, IPC_EXCL );
-	State * state = (State *)shmat ( sharedMemId, NULL, 0 );
-	
+	State * state = ObtainSharedState ( );
 	state->isFree[spotNumber - 1] = false;
 	state->spots[spotNumber - 1] = car;
-
-	shmdt ( state );
-	MutexRelease ( KEY );
+	ReleaseSharedState ( state );
 } // Fin de placeCar
 
 static void ack ( int signalNumber )
@@ -155,35 +147,21 @@ static bool canGoIn ( )
 // to see if we can send a car in right away, or if we should
 // rather place a request and wait to be signaled.
 {
+	State * state = ObtainSharedState ( );
 	bool allowed = true;
-	MutexTake ( KEY );
-
-	size_t size = sizeof ( State );
-	int sharedMemId = shmget ( KEY, size, IPC_EXCL );
-	State * state = (State *)shmat ( sharedMemId, NULL, 0 );
-	
 	if ( state->requestsNumber >= state->freeSpotsNumber )
 	{
 		allowed = false;
 	}
-
-	shmdt ( state );
-	MutexRelease ( KEY );
+	ReleaseSharedState ( state );
 	return allowed;
 }
 
 static void decrementFreeSpots ( )
 {
-	MutexTake ( KEY );
-
-	size_t size = sizeof ( State );
-	int sharedMemId = shmget ( KEY, size, IPC_EXCL );
-	State * state = (State *)shmat ( sharedMemId, NULL, 0 );
-	
+	State * state = ObtainSharedState ( );
 	state->freeSpotsNumber--;
-
-	shmdt ( state );
-	MutexRelease ( KEY );
+	ReleaseSharedState ( state );
 } // Fin de decrementFreeSpots
 
 static void placeRequest ( TypeBarriere entrance, Car car )
@@ -193,18 +171,10 @@ static void placeRequest ( TypeBarriere entrance, Car car )
 	time_t now = time ( NULL );
 	CarRequest request ( entrance, car, now, getpid ( ) );
 	
-	MutexTake ( KEY );
-
-	size_t size = sizeof ( State );
-	int sharedMemId = shmget ( KEY, size, IPC_EXCL );
-	State * state = (State *)shmat ( sharedMemId, NULL, 0 );
-	
+	State * state = ObtainSharedState ( );
 	state->requests[entrance - 1] = request;
 	state->requestsNumber++;
-
-	shmdt ( state );
-	MutexRelease ( KEY );
-
+	ReleaseSharedState ( state );
 	// Display this new request
 	AfficherRequete ( entrance, car.priority, now );
 } // Fin de placeRequest
@@ -227,9 +197,6 @@ void Entrance ( TypeBarriere entrance )
 	for ( ; ; )
 	{
 		Car next = waitForCar ( entrance );
-		if ( next.licensePlate == -1 )
-			cout << "ERROR: invalid car received!" << endl;
-
 		
 		// If there's no free spot right now, place a request
 		// and wait patiently to be signaled by the exit gate
