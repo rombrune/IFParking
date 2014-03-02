@@ -86,10 +86,11 @@ struct CarRequest {
 // For use in the shared memory
 struct State {
 	// Spots
+	// The number of free spots can go below if requests are pending
 	int freeSpotsNumber;
 	Car spots [ NB_PLACES ];
 	// Requests currently posted
-	int requestsNumber;
+	int requestsNumber; // TODO: remove this redundant field?
 	CarRequest requests [ NB_BARRIERES_ENTREE ];
 };
 

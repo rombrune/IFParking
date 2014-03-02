@@ -136,11 +136,7 @@ static bool canGoIn ( )
 // rather place a request and wait to be signaled.
 {
 	State * state = ObtainSharedState ( );
-	bool allowed = true;
-	if ( state->requestsNumber >= state->freeSpotsNumber )
-	{
-		allowed = false;
-	}
+	bool allowed = ( state->freeSpotsNumber >= 0 );
 	ReleaseSharedState ( state );
 	return allowed;
 }
@@ -193,9 +189,11 @@ void Entrance ( TypeBarriere entrance )
 	for ( ; ; )
 	{
 		Car next = waitForCar ( entrance );
+		decrementFreeSpots ( );
 		
 		// If there's no free spot right now, place a request
 		// and wait patiently to be signaled by the exit gate
+		// TODO: let GarerVoiture make the canGoIn check?
 		if ( ! canGoIn ( ) )
 		{
 			authorizationReceived = false;
@@ -210,7 +208,6 @@ void Entrance ( TypeBarriere entrance )
 		}
 		
 		// Allow the car to go in
-		decrementFreeSpots ( ); // TODO: not always necessary
 		pid_t valetPid = GarerVoiture ( entrance );
 		currentValets[valetPid] = next;
 		

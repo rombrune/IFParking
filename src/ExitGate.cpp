@@ -88,19 +88,18 @@ static int comparePriority ( CarRequest const & a, CarRequest const & b )
 	}
 } // Fin de comparePriority
 
-static bool processRequests ( )
+static void processRequests ( )
 // Mode d'emploi :
 // We assume that ONE spot has just freed up. This function
 // finds the most prioritary request from the entrances, and
 // signals the corresponding entrance that it can let its car in.
-// Return false if there was no pending request.
 {
 	State * state = ObtainSharedState ( );
 	
-	bool hasRequest = (state->requestsNumber > 0);
+	bool hasPendingRequest = (state->requestsNumber > 0);
 	CarRequest prioritary;
 	int index = 0;
-	if ( hasRequest )
+	if ( hasPendingRequest )
 	{
 		// Find the most prioritary request
 		for (int i = 1; i < NB_BARRIERES_ENTREE; ++i )
@@ -116,20 +115,17 @@ static bool processRequests ( )
 		prioritary = state->requests[index];
 		state->requestsNumber--;
 		state->requests[index].date = 0;
-
 	}
 	// We release the critical resource as fast as possible
 	ReleaseSharedState ( state );
 	
-	if ( hasRequest )
+	if ( hasPendingRequest )
 	{
 		// Signal the corresponding entrance
 		kill ( prioritary.pid, SIGUSR1 );
 		// Un-show the request
 		Effacer ( TypeZone ( REQUETE_R1 + index ) );
 	}
-
-	return hasRequest;
 } // Find de processRequest
 
 static void incrementFreeSpots ( )
@@ -167,13 +163,10 @@ static void ack ( int signalNumber )
 
 			// Now that a new spot has freed up,
 			// we check if there's any pending request from the entrances
-			bool hasRequest = processRequests ( );
-			if ( !hasRequest )
-			{
-				// No entrance was waiting to be woken up,
-				// thus we can just mark this spot as free.
-				incrementFreeSpots ( );
-			}
+			processRequests ( );
+			// We increment the number of free spots as late as possible
+			// to make sure that there is no spot theft
+			incrementFreeSpots ( );
 		}
 	}
 } // Fin de ack
@@ -199,7 +192,6 @@ static void init ( )
 {
 	// Respond to SIGUSR2 (= controlled destruction)
 	SetSignalHandler ( SIGUSR2, die );
-
 	// Respond to SIGCHLD (= valet has finished getting car out)
 	SetSignalHandler ( SIGCHLD, ack );
 } // Fin de init
