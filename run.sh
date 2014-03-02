@@ -5,6 +5,10 @@ target="parking"
 ps -fu `whoami` | grep -v grep | grep $target > $dir/ps.before
 ipcs > $dir/ipcs.before
 
+
+echo "---------- Make ------------"
+make
+
 echo "---------- Run -------------"
 echo "Running $dir/$target..."
 ($dir/$target)
