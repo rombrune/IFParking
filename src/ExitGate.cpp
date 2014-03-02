@@ -77,6 +77,10 @@ static int comparePriority ( CarRequest const & a, CarRequest const & b )
 	{
 		return 1;
 	}
+	else if ( (a.car.priority != PROF) && (b.car.priority == PROF) )
+	{
+		return -1;
+	}
 	// Otherwise, first arrived => first served
 	else if ( a.date < b.date )
 	{
