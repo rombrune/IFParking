@@ -181,6 +181,9 @@ static void placeRequest ( TypeBarriere entrance, Car car )
 
 	shmdt ( state );
 	MutexRelease ( KEY );
+
+	// Display this new request
+	AfficherRequete ( entrance, car.priority, time ( NULL ) );
 }
 
 //////////////////////////////////////////////////////////////////  PUBLIC
