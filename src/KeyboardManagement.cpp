@@ -61,8 +61,8 @@ static void queueCar ( TypeBarriere entrance, TypeUsager priority )
 	// Insert it into the mailbox
 	int key = ftok ( EXEC_NAME, KEY );
 	int mailboxId = msgget ( key, IPC_EXCL );
-	// TODO: test for failure?
 	int size = sizeof ( CarRequest ) - sizeof ( long );
+	// TODO: test for failure?
 	msgsnd ( mailboxId, &message, size, 0 );
 } // Fin de queueCar
 

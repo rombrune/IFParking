@@ -1,21 +1,33 @@
+/*************************************************************************
+							main
+							-------------------
+
+*************************************************************************/
+
+//---------- Réalisation de la tâche <main> (fichier main.cpp) -----------
+
+/////////////////////////////////////////////////////////////////  INCLUDE
+//-------------------------------------------------------- Include système
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/msg.h>
 #include <signal.h>
-
+//------------------------------------------------------ Include personnel
 #include "Outils.h"
+
 #include "config.h"
 #include "Heure.h"
 #include "KeyboardManagement.h"
 #include "Entrance.h"
+///////////////////////////////////////////////////////////////////  PRIVE
+//------------------------------------------------------------- Constantes
 
-static pid_t keyboardManagementPid;
-static pid_t hourPid;
-static pid_t entrance1Pid, entrance2Pid, entrance3Pid;
+//------------------------------------------------------------------ Types
 
-// TODO: use the Task template
+//---------------------------------------------------- Variables statiques
 
+//------------------------------------------------------ Fonctions privées
 static void ack ( int signalNumber )
 // Mode d'emploi :
 // Acknowledges the death of every child process
@@ -51,8 +63,16 @@ static void destroy ( )
 	msgctl ( mailboxId, IPC_RMID, 0 );
 } // Fin de destroy
 
+//////////////////////////////////////////////////////////////////  PUBLIC
+//---------------------------------------------------- Fonctions publiques
+
 int main ( int argc, const char * argv[] )
 {
+	pid_t keyboardManagementPid;
+	pid_t hourPid;
+	pid_t entrance1Pid, entrance2Pid, entrance3Pid;
+
+
 	// ---------- INITIALIZATION
 	InitialiserApplication( XTERM );
 	init ( );
@@ -107,5 +127,4 @@ int main ( int argc, const char * argv[] )
 		TerminerApplication ( );
 		exit ( 0 );
 	}
-}
-
+} // Fin de main
