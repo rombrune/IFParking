@@ -91,3 +91,22 @@ struct State {
 		// Empty
 	}
 };
+
+//////////////////////////////////////////////////////////////////  PUBLIC
+//---------------------------------------------------- Fonctions publiques
+
+void MutexTake ( int key );
+// Mode d'emploi :
+// Try to obtain a lock. Wait until the lock can be obtained.
+// Contrat :
+// A semaphore buffer with 1 semaphore has been initialized
+// with the given key.
+
+void MutexRelease ( int key );
+// Mode d'emploi :
+// Try to release a lock. Wait until the lock can be released.
+// Contrat :
+// A semaphore buffer with 1 semaphore has been initialized
+// with the given key.
+
+#endif // CONFIG_H
