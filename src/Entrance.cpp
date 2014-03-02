@@ -35,6 +35,24 @@ using namespace std;
 static map<pid_t, Car> currentValets;
 
 //------------------------------------------------------ Fonctions privées
+static void placeCar ( unsigned int spotNumber, Car car )
+// Mode d'emploi :
+// Updates the state of the parking lot (in shared memory)
+// to set <spotNumber> to the given car
+{
+	MutexTake ( KEY );
+
+	size_t size = sizeof ( State );
+	int sharedMemId = shmget ( KEY, size, IPC_EXCL );
+	State * state = (State *)shmat ( sharedMemId, NULL, 0 );
+	
+	state->isFree[spotNumber - 1] = false;
+	state->spots[spotNumber - 1] = car;
+
+	shmdt ( state );
+	MutexRelease ( KEY );
+} // Fin de placeCar
+
 static void ack ( int signalNumber )
 // Mode d'emploi :
 // Acknowledges the death of a child GarerParking task.
@@ -51,6 +69,9 @@ static void ack ( int signalNumber )
 			int spotNumber = WEXITSTATUS ( status );
 			Car car = currentValets[pid];
 			car.entranceTime = time ( NULL );
+
+			// Update the state of the parking lot
+			placeCar ( spotNumber, car );
 
 			// Remove this pid from the list of running tasks
 			currentValets.erase ( pid );
@@ -141,7 +162,7 @@ static bool canGoIn ( )
 	int sharedMemId = shmget ( KEY, size, IPC_EXCL );
 	State * state = (State *)shmat ( sharedMemId, NULL, 0 );
 	
-	if ( state->requestsNumber >= state->freeSpots )
+	if ( state->requestsNumber >= state->freeSpotsNumber )
 	{
 		allowed = false;
 	}
@@ -159,7 +180,7 @@ static void decrementFreeSpots ( )
 	int sharedMemId = shmget ( KEY, size, IPC_EXCL );
 	State * state = (State *)shmat ( sharedMemId, NULL, 0 );
 	
-	state->freeSpots--;
+	state->freeSpotsNumber--;
 
 	shmdt ( state );
 	MutexRelease ( KEY );
@@ -169,13 +190,15 @@ static void placeRequest ( TypeBarriere entrance, Car car )
 // Contrat :
 // 0 <= entrance < NB_BARRIERES_ENTREES
 {
+	time_t now = time ( NULL );
+	CarRequest request ( entrance, car, now, getpid ( ) );
+	
 	MutexTake ( KEY );
 
 	size_t size = sizeof ( State );
 	int sharedMemId = shmget ( KEY, size, IPC_EXCL );
 	State * state = (State *)shmat ( sharedMemId, NULL, 0 );
 	
-	CarRequest request ( entrance, car );
 	state->requests[entrance - 1] = request;
 	state->requestsNumber++;
 
@@ -183,7 +206,7 @@ static void placeRequest ( TypeBarriere entrance, Car car )
 	MutexRelease ( KEY );
 
 	// Display this new request
-	AfficherRequete ( entrance, car.priority, time ( NULL ) );
+	AfficherRequete ( entrance, car.priority, now );
 } // Fin de placeRequest
 
 //////////////////////////////////////////////////////////////////  PUBLIC
@@ -206,21 +229,24 @@ void Entrance ( TypeBarriere entrance )
 		Car next = waitForCar ( entrance );
 		if ( next.licensePlate == -1 )
 			cout << "ERROR: invalid car received!" << endl;
-		// TODO: check that it can indeed park and place request if necessary
 
-		if ( canGoIn ( ) )
-		{
-			decrementFreeSpots ( );
-			pid_t valetPid = GarerVoiture ( entrance );
-			currentValets[valetPid] = next;
-		}
-		else
+		
+		// If there's no free spot right now, place a request
+		// and wait patiently to be signaled by the exit gate
+		if ( ! canGoIn ( ) )
 		{
 			placeRequest ( entrance, next );
-			// Wait to be signaled (SIGUSR1)
+			// TODO: wait to be signaled
 			die ( 0 );
 		}
-		// TODO: check that at least ENTRANCE_SLEEP_DELAY time is slept
+		
+		// Allow the car to go in
+		decrementFreeSpots ( );
+		pid_t valetPid = GarerVoiture ( entrance );
+		currentValets[valetPid] = next;
+		
+		// Sleep for at least <ENTRANCE_SLEEP_DELAY>
+		// before allowing another car in
 		unsigned int remaining = ENTRANCE_SLEEP_DELAY;
 		while ( remaining > 0 )
 		{

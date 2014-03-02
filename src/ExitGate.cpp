@@ -36,6 +36,130 @@ static int PipeRead;
 static map<pid_t, Car> currentValets;
 
 //------------------------------------------------------ Fonctions privées
+static void removeCar ( unsigned int spotNumber )
+// Mode d'emploi :
+// Updates the state of the parking lot (in shared memory)
+// to set <spotNumber> to empty
+{
+	MutexTake ( KEY );
+
+	size_t size = sizeof ( State );
+	int sharedMemId = shmget ( KEY, size, IPC_EXCL );
+	State * state = (State *)shmat ( sharedMemId, NULL, 0 );
+	
+	state->isFree[spotNumber - 1] = true;
+	state->spots[spotNumber - 1].licensePlate = -1;
+
+	shmdt ( state );
+	MutexRelease ( KEY );
+
+	// Display this change
+	Effacer ( TypeZone ( ETAT_P1 + (spotNumber - 1) ) );
+} // Fin de removeCar
+
+static int comparePriority ( CarRequest const & a, CarRequest const & b )
+// Mode d'emploi :
+// Return 1 if request <a> is more prioritary than request <b>.
+// Return 0 if both cars are as prioritary.
+// Return -1 if request <a> is less prioritary than request <b>.
+{
+	// TODO: check thoroughly
+	// TODO: rewrite as operator< ?
+
+	// Particular case: one of the passed requests is not valid
+	if ( a.date == 0 )
+	{
+		return -1;
+	}
+	else if ( b.date == 0 )
+	{
+		return 1;
+	}
+
+	if ( (a.car.priority == b.car.priority) && (a.date == b.date) )
+	{
+		return 0;
+	}
+	// A professor is always prioritary
+	else if ( (a.car.priority == PROF) && (b.car.priority != PROF) )
+	{
+		return 1;
+	}
+	// Otherwise, first arrived => first served
+	else if ( a.date < b.date )
+	{
+		return 1;
+	}
+	else
+	{
+		return -1;
+	}
+} // Fin de comparePriority
+
+static bool processRequests ( )
+// Mode d'emploi :
+// We assume that ONE spot has just freed up. This function
+// finds the most prioritary request from the entrances, and
+// signals the corresponding entrance that it can let its car in.
+// Return false if there was no pending request.
+{
+
+	MutexTake ( KEY );
+
+	size_t size = sizeof ( State );
+	int sharedMemId = shmget ( KEY, size, IPC_EXCL );
+	State * state = (State *)shmat ( sharedMemId, NULL, 0 );
+	
+	bool hasRequest = (state->requestsNumber > 0);
+	CarRequest prioritary;
+	if ( hasRequest )
+	{
+		// Find the most prioritary request
+		int index = 0;
+		for (int i = 1; i < NB_BARRIERES_ENTREE; ++i )
+		{
+			if ( comparePriority ( state->requests[i], 
+								   state->requests[index] ) > 0 )
+			{
+				index = i;
+			}
+		}
+
+		// Remove it from the shared memory
+		prioritary = state->requests[index];
+		state->requestsNumber--;
+		state->requests[index].date = 0;
+
+	}
+	// We release the critical resource as fast as possible
+	shmdt ( state );
+	MutexRelease ( KEY );
+	
+	if ( hasRequest )
+	{
+		// Signal the corresponding entrance
+		cout << "Signaling entrance: " << prioritary.pid << endl;
+		kill ( SIGUSR1, prioritary.pid );
+	}
+
+	return hasRequest;
+} // Find de processRequest
+
+static void incrementFreeSpots ( )
+{
+	MutexTake ( KEY );
+
+	size_t size = sizeof ( State );
+	int sharedMemId = shmget ( KEY, size, IPC_EXCL );
+	State * state = (State *)shmat ( sharedMemId, NULL, 0 );
+	
+	state->freeSpotsNumber++;
+
+	shmdt ( state );
+	MutexRelease ( KEY );
+} // Fin de incrementFreeSpots
+
+
 static void ack ( int signalNumber )
 // Mode d'emploi :
 // Acknowledges the death of a child SortirVoiture task.
@@ -48,14 +172,28 @@ static void ack ( int signalNumber )
 	{
 		if ( pid != 0 && WIFEXITED ( status ) )
 		{
+			// Retrieve the spot number (encoded into the return value)
+			int spotNumber = WEXITSTATUS ( status );
+			// Free this spot number
+			removeCar ( spotNumber );
+
+			// Display the car that just went out
 			Car car = currentValets[pid];
+			AfficherSortie ( car.priority, car.licensePlate,
+							car.entranceTime, time ( NULL ) );
 
 			// Remove this pid from the list of running tasks
 			currentValets.erase ( pid );
 
-			// Display the newly parked car
-			AfficherSortie ( car.priority, car.licensePlate,
-							car.entranceTime, time ( NULL ) );
+			// Now that a new spot has freed up,
+			// we check if there's any pending request from the entrances
+			bool hasRequest = processRequests ( );
+			if ( !hasRequest )
+			{
+				// No entrance was waiting to be woken up,
+				// thus we can just mark this spot as free.
+				incrementFreeSpots ( );
+			}
 		}
 	}
 } // Fin de ack
@@ -95,7 +233,11 @@ static void init ( )
 	sigaction ( SIGCHLD, &action, NULL );
 } // Fin de init
 
-static void incrementFreeSpots ( )
+static bool getCarAt ( unsigned int spotNumber, Car * car )
+// Mode d'emploi :
+// Retrieves the car at the given spot number in the shared memory.
+// Writes the retrieved car in <car> if <car> is not NULL.
+// Return false if there is no car at this spot.
 {
 	MutexTake ( KEY );
 
@@ -103,11 +245,21 @@ static void incrementFreeSpots ( )
 	int sharedMemId = shmget ( KEY, size, IPC_EXCL );
 	State * state = (State *)shmat ( sharedMemId, NULL, 0 );
 	
-	state->freeSpots++;
+	bool found = true;
+	if ( state->isFree[spotNumber - 1] )
+	{
+		found = false;
+	}
+	else if ( car != NULL )
+	{
+		(*car) = state->spots[spotNumber - 1];
+	}
 
 	shmdt ( state );
 	MutexRelease ( KEY );
-} // Fin de incrementFreeSpots
+
+	return found;
+}
 
 //////////////////////////////////////////////////////////////////  PUBLIC
 //---------------------------------------------------- Fonctions publiques
@@ -141,15 +293,17 @@ void ExitGate ( int pipeR, int pipeW )
 
 		if ( spotNumber > 0 && spotNumber <= NB_PLACES )
 		{
-			incrementFreeSpots ( );
-			pid_t valetPid = SortirVoiture ( spotNumber );
-			// TODO: find the corresponding car in the state of the parking lot
+			// Find the corresponding car in the state of the parking lot
 			Car car;
-			currentValets[valetPid] = car;
+			bool hasCar = getCarAt ( spotNumber, &car );
+			if ( hasCar )
+			{
+				pid_t valetPid = SortirVoiture ( spotNumber );
+				currentValets[valetPid] = car;
 
-			// Now that a new spot has freed up,
-			// we check if there's any open request from the entrances
-			// TODO
+				// The parking spot is effectively freed up
+				// when the valet returns.
+			}
 		}
 	}
 } // Fin de ExitGate
