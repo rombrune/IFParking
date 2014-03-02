@@ -14,7 +14,7 @@
 #include "Outils.h"
 #include "Menu.h"
 
-#include "config.h"
+#include "common.h"
 #include "KeyboardManagement.h"
 ///////////////////////////////////////////////////////////////////  PRIVE
 //------------------------------------------------------------- Constantes
@@ -59,8 +59,7 @@ static void queueCar ( TypeBarriere entrance, TypeUsager priority )
 	CarRequest message ( entrance, car );
 
 	// Insert it into the mailbox
-	int key = ftok ( EXEC_NAME, KEY );
-	int mailboxId = msgget ( key, IPC_EXCL );
+	int mailboxId = msgget ( KEY, IPC_EXCL );
 	int size = sizeof ( CarRequest ) - sizeof ( long );
 	// TODO: test for failure?
 	msgsnd ( mailboxId, &message, size, 0 );

@@ -23,7 +23,7 @@ using namespace std;
 #include "Outils.h"
 
 #include "Entrance.h"
-#include "config.h"
+#include "common.h"
 ///////////////////////////////////////////////////////////////////  PRIVE
 //------------------------------------------------------------- Constantes
 
@@ -107,8 +107,7 @@ static Car waitForCar ( TypeBarriere entrance )
 	CarRequest message;
 
 	// Read from the mailbox
-	int key = ftok ( EXEC_NAME, KEY );
-	int mailboxId = msgget ( key, IPC_EXCL );
+	int mailboxId = msgget ( KEY, IPC_EXCL );
 	int size = sizeof ( CarRequest ) - sizeof ( long );
 	int status;
 	// Restart this system call as long as we really have not 

@@ -12,6 +12,8 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/msg.h>
+#include <sys/shm.h>
+#include <sys/sem.h>
 #include <signal.h>
 //------------------------------------------------------ Include personnel
 #include "Outils.h"
@@ -53,6 +55,22 @@ static void init ( )
 
 	// Create the mailbox (KeyboardManagement => Entrances)
 	int mailboxId = msgget ( KEY, (IPC_CREAT|IPC_EXCL|permissions) );
+
+	// Create the shared memory (Entrances <=> Exit)
+	size_t size = sizeof ( State );
+	int sharedMemId = shmget ( KEY, size, (IPC_CREAT|IPC_EXCL|permissions) );
+
+	// Test
+	State * state = (State *)shmat ( sharedMemId, NULL, 0 );
+	state->freeSpots = 2;
+	shmdt ( state );
+
+	// Create the shared memory mutex
+	int semId = semget ( KEY, 1, (IPC_CREAT|IPC_EXCL|permissions) );
+	// Initialize the mutex to 1
+	// (because the shared memory is initially accessible)
+	MutexRelease ( KEY );
+
 } // Find de init
 
 static void destroy ( )
@@ -61,6 +79,16 @@ static void destroy ( )
 	// Free the mailbox
 	int mailboxId = msgget ( KEY, IPC_EXCL );
 	msgctl ( mailboxId, IPC_RMID, 0 );
+
+	// Free the shared memory
+	size_t size = sizeof ( State );
+	int sharedMemId = shmget ( KEY, size, IPC_EXCL );
+	shmctl ( sharedMemId, IPC_RMID, 0 );
+
+	// Free the shared memory mutex
+	int semId = semget ( KEY, 1, IPC_EXCL );
+	semctl ( semId, 0, IPC_RMID, 0);
+
 } // Fin de destroy
 
 //////////////////////////////////////////////////////////////////  PUBLIC
