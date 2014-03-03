@@ -82,10 +82,12 @@ static void askExit ( unsigned int spotNumber )
 //---------------------------------------------------- Fonctions publiques
 void KeyboardManagement ( int pipeR, int pipeW )
 {
+	//----------------------------------------------------- INITIALIZATION
 	PipeWrite = pipeW;
 	// Close the unused end of the pipe
 	close ( pipeR );
 
+	//---------------------------------------------------------------- RUN
 	for ( ; ; )
 	{
 		Menu ( );

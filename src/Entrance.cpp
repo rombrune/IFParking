@@ -43,6 +43,46 @@ static void placeCar ( unsigned int spotNumber, Car const & car )
 	ReleaseSharedState ( state );
 } // Fin de placeCar
 
+static bool canGoIn ( )
+// Mode d'emploi :
+// Checks in the parking lot state (shared memory)
+// to see if we can send a car in right away, or if we should
+// rather place a request and wait to be signaled.
+{
+	State * state = ObtainSharedState ( );
+	bool allowed = ( state->freeSpotsNumber >= 0 );
+	ReleaseSharedState ( state );
+	return allowed;
+} // Fin de canGoIn
+
+static void decrementFreeSpots ( )
+{
+	State * state = ObtainSharedState ( );
+	state->freeSpotsNumber--;
+	ReleaseSharedState ( state );
+} // Fin de decrementFreeSpots
+
+static void placeRequest ( TypeBarriere entrance, Car const & car )
+{
+	time_t now = time ( NULL );
+	CarRequest request ( entrance, car, now, getpid ( ) );
+	
+	State * state = ObtainSharedState ( );
+	state->requests[entrance - 1] = request;
+	state->requestsNumber++;
+	ReleaseSharedState ( state );
+	// Display this new request
+	AfficherRequete ( entrance, car.priority, now );
+} // Fin de placeRequest
+
+static void authorize ( int signalNumber )
+// Mode d'emploi :
+// This signal handler is called when the exit gate
+// allows us to let our car in.
+{
+	authorizationReceived = true;
+} // Fin de authorize
+
 static void ack ( int signalNumber )
 // Mode d'emploi :
 // Acknowledge the death of a children GarerParking tasks.
@@ -129,46 +169,6 @@ static Car waitForCar ( TypeBarriere entrance )
 	return message.car;
 } // Fin de waitForCar
 
-static bool canGoIn ( )
-// Mode d'emploi :
-// Checks in the parking lot state (shared memory)
-// to see if we can send a car in right away, or if we should
-// rather place a request and wait to be signaled.
-{
-	State * state = ObtainSharedState ( );
-	bool allowed = ( state->freeSpotsNumber >= 0 );
-	ReleaseSharedState ( state );
-	return allowed;
-} // Fin de canGoIn
-
-static void decrementFreeSpots ( )
-{
-	State * state = ObtainSharedState ( );
-	state->freeSpotsNumber--;
-	ReleaseSharedState ( state );
-} // Fin de decrementFreeSpots
-
-static void placeRequest ( TypeBarriere entrance, Car const & car )
-{
-	time_t now = time ( NULL );
-	CarRequest request ( entrance, car, now, getpid ( ) );
-	
-	State * state = ObtainSharedState ( );
-	state->requests[entrance - 1] = request;
-	state->requestsNumber++;
-	ReleaseSharedState ( state );
-	// Display this new request
-	AfficherRequete ( entrance, car.priority, now );
-} // Fin de placeRequest
-
-static void authorize ( int signalNumber )
-// Mode d'emploi :
-// This signal handler is called when the exit gate
-// allows us to let our car in.
-{
-	authorizationReceived = true;
-} // Fin de authorize
-
 //////////////////////////////////////////////////////////////////  PUBLIC
 //---------------------------------------------------- Fonctions publiques
 void Entrance ( TypeBarriere entrance )
@@ -181,8 +181,10 @@ void Entrance ( TypeBarriere entrance )
 // 7. Sleep for <ENTRANCE_SLEEP_DELAY> seconds
 // 8. Goto step 1.
 {
+	//----------------------------------------------------- INITIALIZATION
 	init ( );
 
+	//---------------------------------------------------------------- RUN
 	for ( ; ; )
 	{
 		Car next = waitForCar ( entrance );

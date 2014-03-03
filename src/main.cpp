@@ -113,7 +113,7 @@ int main ( int argc, const char * argv[] )
 	pid_t entrance1Pid, entrance2Pid, entrance3Pid;
 	pid_t exitGatePid;
 
-	// ---------- INITIALIZATION
+	//----------------------------------------------------- INITIALIZATION
 	InitialiserApplication( XTERM );
 	init ( );
 
@@ -143,9 +143,10 @@ int main ( int argc, const char * argv[] )
 	{
 		hourPid = ActiverHeure ( );
 
+	//---------------------------------------------------------------- RUN
 		WaitForEnd ( keyboardManagementPid );
 
-		// ---------- DESTRUCTION
+	//-------------------------------------------------------- DESTRUCTION
 		// From now on, handle SIGCHLD for normal process end sync
 		SetSignalHandler ( SIGCHLD, ack );
 

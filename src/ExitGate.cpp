@@ -153,6 +153,8 @@ static void ack ( int signalNumber )
 	{
 		if ( pid != 0 && WIFEXITED ( status ) )
 		{
+			// Remove this pid from the list of running tasks
+			currentValets.erase ( pid );
 			// Retrieve the spot number (encoded into the return value)
 			int spotNumber = WEXITSTATUS ( status );
 			// Free this spot in the shared state
@@ -161,9 +163,6 @@ static void ack ( int signalNumber )
 			// Display the car that just went out
 			AfficherSortie ( car.priority, car.licensePlate,
 							car.entranceTime, time ( NULL ) );
-
-			// Remove this pid from the list of running tasks
-			currentValets.erase ( pid );
 
 			// Now that a new spot has freed up,
 			// we check if there's any pending request from the entrances
@@ -209,12 +208,14 @@ void ExitGate ( int pipeR, int pipeW )
 // 2. Launch a child SortirVoiture task
 // 3. Process any request from the Entrances when the child task returns.
 {
+	//----------------------------------------------------- INITIALIZATION
 	init ( );
 
 	PipeRead = pipeR;
 	// Close the unused end of the pipe
 	close ( pipeW );
 
+	//---------------------------------------------------------------- RUN
 	for ( ; ; )
 	{
 		unsigned int spotNumber = -1;
