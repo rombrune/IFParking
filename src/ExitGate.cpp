@@ -14,7 +14,7 @@
 #include <signal.h>
 #include <sys/wait.h>
 #include <errno.h>
-#include <set>
+#include <map>
 //------------------------------------------------------ Include personnel
 #include "Outils.h"
 
@@ -28,8 +28,9 @@
 //---------------------------------------------------- Variables statiques
 // The file descriptor of the communication pipe
 static int PipeRead;
-// A list of all the currently running SortirVoiture tasks
-static set<pid_t> currentValets;
+// A map of all the currently running SortirVoiture tasks
+// spot number => pid of the task taking care of it
+static map<unsigned int, pid_t> currentValets;
 
 //------------------------------------------------------ Fonctions privées
 static int comparePriority ( CarRequest const & a, CarRequest const & b )
@@ -153,12 +154,12 @@ static void ack ( int signalNumber )
 	{
 		if ( pid != 0 && WIFEXITED ( status ) )
 		{
-			// Remove this pid from the list of running tasks
-			currentValets.erase ( pid );
 			// Retrieve the spot number (encoded into the return value)
 			int spotNumber = WEXITSTATUS ( status );
 			// Free this spot in the shared state
 			Car car = removeCar ( spotNumber );
+			// Remove this pid from the list of running tasks
+			currentValets.erase ( spotNumber );
 
 			// Display the car that just went out
 			AfficherSortie ( car.priority, car.licensePlate,
@@ -182,11 +183,11 @@ static void die ( int signalNumber )
 	MaskSignal ( SIGCHLD );
 
 	// Kill every running SortirVoiture
-	for ( set<pid_t>::iterator it = currentValets.begin();
+	for ( map<unsigned int, pid_t>::iterator it = currentValets.begin();
 			it != currentValets.end(); ++it )
 	{
-		kill ( *it, SIGUSR2 );
-		waitpid( *it, NULL, 0 );
+		kill ( it->second, SIGUSR2 );
+		waitpid( it->second, NULL, 0 );
 	}
 	exit ( 0 );
 } // Fin de die
@@ -231,12 +232,16 @@ void ExitGate ( int pipeR, int pipeW )
 			}
 		}
 
-		pid_t valetPid = SortirVoiture ( spotNumber );
-		if ( valetPid != -1 )
+		// Check that we don't already have a child task taking care of it
+		if ( currentValets.find ( spotNumber ) == currentValets.end ( ) )
 		{
-			currentValets.insert ( valetPid );
-			// The parking spot will be effectively freed up
-			// when the valet returns.
+			pid_t valetPid = SortirVoiture ( spotNumber );
+			if ( valetPid != -1 )
+			{
+				currentValets[spotNumber] = valetPid;
+				// The parking spot will be effectively freed up
+				// when the valet returns.
+			}
 		}
 	}
 } // Fin de ExitGate
