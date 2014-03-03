@@ -51,13 +51,12 @@ static void init ( )
 	// By default, mask SIGUSR2 signal
 	MaskSignal ( SIGUSR2 );
 
-	// TODO: check that permissions are as tight as possible
-	int permissions = 0600;
-
 	// Create the mailbox (KeyboardManagement => Entrances)
+	int permissions = (MSG_R|MSG_W);
 	int mailboxId = msgget ( KEY, (IPC_CREAT|IPC_EXCL|permissions) );
 
 	// Create the shared memory (Entrances <=> Exit)
+	permissions = (SHM_R|SHM_W);
 	size_t size = sizeof ( State );
 	int sharedMemId = shmget ( KEY, size, (IPC_CREAT|IPC_EXCL|permissions) );
 
@@ -68,6 +67,7 @@ static void init ( )
 	shmdt ( state );
 
 	// Create the shared memory mutex
+	permissions = (SEM_R|SEM_W);
 	int semId = semget ( KEY, 1, (IPC_CREAT|IPC_EXCL|permissions) );
 	// Initialize the mutex to 1
 	// (because the shared memory is initially accessible)

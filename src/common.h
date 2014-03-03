@@ -17,9 +17,20 @@
 
 //------------------------------------------------------------- Constantes
 // For use with ftok
-#define EXEC_NAME "parking"
-#define KEY_NUMBER 3
+#define	EXEC_NAME	"parking"
+#define	KEY_NUMBER	3
 extern int const KEY;
+
+// Permissions for IPCs
+// Semaphores
+#define	SEM_R		0400
+#define	SEM_W		0200
+// Mailboxes
+#define	MSG_R		0400
+#define	MSG_W		0200
+// Shared memories
+#define	SHM_R		0400
+#define	SHM_W		0200
 
 // Number of seconds to sleep right after letting a car enter
 #define ENTRANCE_SLEEP_DELAY 1
