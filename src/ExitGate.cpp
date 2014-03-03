@@ -14,7 +14,7 @@
 #include <signal.h>
 #include <sys/wait.h>
 #include <errno.h>
-#include <map>
+#include <set>
 //------------------------------------------------------ Include personnel
 #include "Outils.h"
 
@@ -28,23 +28,10 @@
 //---------------------------------------------------- Variables statiques
 // The file descriptor of the communication pipe
 static int PipeRead;
-// A map to hold the currently running SortirVoiture tasks
-static map<pid_t, Car> currentValets;
+// A list of all the currently running SortirVoiture tasks
+static set<pid_t> currentValets;
 
 //------------------------------------------------------ Fonctions privées
-static void removeCar ( unsigned int spotNumber )
-// Mode d'emploi :
-// Updates the state of the parking lot (in shared memory)
-// to set <spotNumber> to empty
-{
-	State * state = ObtainSharedState ( );
-	state->spots[spotNumber - 1].licensePlate = -1;
-	ReleaseSharedState ( state );
-
-	// Display this change
-	Effacer ( TypeZone ( ETAT_P1 + (spotNumber - 1) ) );
-} // Fin de removeCar
-
 static int comparePriority ( CarRequest const & a, CarRequest const & b )
 // Mode d'emploi :
 // Return 1 if request <a> is more prioritary than request <b>.
@@ -135,6 +122,23 @@ static void incrementFreeSpots ( )
 	ReleaseSharedState ( state );
 } // Fin de incrementFreeSpots
 
+static Car removeCar ( unsigned int spotNumber )
+// Mode d'emploi :
+// Updates the state of the parking lot (in shared memory)
+// to set <spotNumber> to empty.
+// Return the car that was parked there.
+{
+	State * state = ObtainSharedState ( );
+	Car previous = state->spots[spotNumber - 1];
+	state->spots[spotNumber - 1].licensePlate = -1;
+	ReleaseSharedState ( state );
+
+	// Display this change
+	Effacer ( TypeZone ( ETAT_P1 + (spotNumber - 1) ) );
+
+	return previous;
+} // Fin de removeCar
+
 static void ack ( int signalNumber )
 // Mode d'emploi :
 // Acknowledge the death of children SortirVoiture tasks.
@@ -151,11 +155,10 @@ static void ack ( int signalNumber )
 		{
 			// Retrieve the spot number (encoded into the return value)
 			int spotNumber = WEXITSTATUS ( status );
-			// Free this spot number
-			removeCar ( spotNumber );
+			// Free this spot in the shared state
+			Car car = removeCar ( spotNumber );
 
 			// Display the car that just went out
-			Car car = currentValets[pid];
 			AfficherSortie ( car.priority, car.licensePlate,
 							car.entranceTime, time ( NULL ) );
 
@@ -180,11 +183,11 @@ static void die ( int signalNumber )
 	MaskSignal ( SIGCHLD );
 
 	// Kill every running SortirVoiture
-	for ( map<pid_t, Car>::iterator it = currentValets.begin();
+	for ( set<pid_t>::iterator it = currentValets.begin();
 			it != currentValets.end(); ++it )
 	{
-		kill ( it->first, SIGUSR2 );
-		waitpid( it->first, NULL, 0 );
+		kill ( *it, SIGUSR2 );
+		waitpid( *it, NULL, 0 );
 	}
 	exit ( 0 );
 } // Fin de die
@@ -196,20 +199,6 @@ static void init ( )
 	// Respond to SIGCHLD (= valet has finished getting car out)
 	SetSignalHandler ( SIGCHLD, ack );
 } // Fin de init
-
-static Car getCarAt ( unsigned int spotNumber )
-// Mode d'emploi :
-// Retrieves the car at the given spot number in the shared memory.
-// Writes the retrieved car in <car> if <car> is not NULL.
-// Return false if there is no car at this spot.
-// Contrat :
-// There is indeed a car parked at this spot.
-{
-	State * state = ObtainSharedState ( );
-	Car car = state->spots[spotNumber - 1];
-	ReleaseSharedState ( state );
-	return car;
-} // Fin de getCarAt
 
 //////////////////////////////////////////////////////////////////  PUBLIC
 //---------------------------------------------------- Fonctions publiques
@@ -244,8 +233,7 @@ void ExitGate ( int pipeR, int pipeW )
 		pid_t valetPid = SortirVoiture ( spotNumber );
 		if ( valetPid != -1 )
 		{
-			// Find the corresponding car in the state of the parking lot
-			currentValets[valetPid] = getCarAt ( spotNumber );
+			currentValets.insert ( valetPid );
 			// The parking spot will be effectively freed up
 			// when the valet returns.
 		}
