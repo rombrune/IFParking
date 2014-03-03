@@ -152,12 +152,16 @@ int main ( int argc, const char * argv[] )
 
 		// Kill every created process in reverse order
 		kill ( hourPid, SIGUSR2 );
+		WaitForEnd ( hourPid );
 		kill ( exitGatePid, SIGUSR2 );
+		WaitForEnd ( exitGatePid );
 		kill ( entrance3Pid, SIGUSR2 );
+		WaitForEnd ( entrance3Pid );
 		kill ( entrance2Pid, SIGUSR2 );
+		WaitForEnd ( entrance2Pid );
 		kill ( entrance1Pid, SIGUSR2 );
+		WaitForEnd ( entrance1Pid );
 
-		// TODO: wait for every processes to be down?
 		destroy ( );
 		TerminerApplication ( );
 		exit ( 0 );
