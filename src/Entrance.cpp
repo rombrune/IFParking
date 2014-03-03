@@ -92,9 +92,9 @@ static void ack ( int signalNumber )
 	int status;
 	pid_t pid;
 	// For each child task that has died
-	while ( (pid = waitpid ( -1, &status, WNOHANG )) != - 1 )
+	while ( (pid = waitpid ( -1, &status, WNOHANG )) > 0 )
 	{
-		if ( pid != 0 && WIFEXITED ( status ) )
+		if ( WIFEXITED ( status ) )
 		{
 			// Retrieve the spot number (encoded into the return value)
 			int spotNumber = WEXITSTATUS ( status );
