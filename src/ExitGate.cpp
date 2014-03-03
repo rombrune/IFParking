@@ -135,10 +135,11 @@ static void incrementFreeSpots ( )
 	ReleaseSharedState ( state );
 } // Fin de incrementFreeSpots
 
-
 static void ack ( int signalNumber )
 // Mode d'emploi :
-// Acknowledges the death of a child SortirVoiture task.
+// Acknowledge the death of children SortirVoiture tasks.
+// Effectively free the parking spot that used to be taken by the car.
+// Process the most prioritary pending request.
 {
 	// Retrieve the pid of the terminated child
 	int status;
@@ -208,7 +209,7 @@ static Car getCarAt ( unsigned int spotNumber )
 	Car car = state->spots[spotNumber - 1];
 	ReleaseSharedState ( state );
 	return car;
-}
+} // Fin de getCarAt
 
 //////////////////////////////////////////////////////////////////  PUBLIC
 //---------------------------------------------------- Fonctions publiques
@@ -217,7 +218,7 @@ void ExitGate ( int pipeR, int pipeW )
 // 1. Wait for a spot number to be written 
 // in the communication pipe (from KeyboardManagement)
 // 2. Launch a child SortirVoiture task
-// 3. Process any request from the Entrances
+// 3. Process any request from the Entrances when the child task returns.
 {
 	init ( );
 
@@ -245,7 +246,7 @@ void ExitGate ( int pipeR, int pipeW )
 		{
 			// Find the corresponding car in the state of the parking lot
 			currentValets[valetPid] = getCarAt ( spotNumber );
-			// The parking spot is effectively freed up
+			// The parking spot will be effectively freed up
 			// when the valet returns.
 		}
 	}

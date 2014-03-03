@@ -4,11 +4,11 @@
 
 *************************************************************************/
 
-//---------- Réalisation de la tâche <KeyboardManagement> (fichier KeyboardManagement.cpp) ---
+// Réalisation de la tâche <KeyboardManagement> (fichier KeyboardManagement.cpp)
 
 /////////////////////////////////////////////////////////////////  INCLUDE
 //-------------------------------------------------------- Include système
-#include <cstdlib>
+#include <stdlib.h>
 #include <unistd.h>
 #include <sys/msg.h>
 //------------------------------------------------------ Include personnel
@@ -28,7 +28,8 @@ static int PipeWrite;
 //------------------------------------------------------ Fonctions privées
 static TypeBarriere getTypeBarriere ( int entranceNumber, TypeUsager priority )
 // Mode d'emploi :
-// Return the TypeBarriere corresponding to the given entrance number.
+// Return the TypeBarriere corresponding to the given entrance number
+// and kind of user (different users may use different entrance gates).
 // Contrat :
 // 1 <= entranceNumber <= 2 
 {
@@ -75,7 +76,7 @@ static void askExit ( unsigned int spotNumber )
 // 0 <= spotNumber <= NB_PLACES
 {
 	write ( PipeWrite, &spotNumber, sizeof ( unsigned int ) );
-}
+} // Fin de askExit
 
 //////////////////////////////////////////////////////////////////  PUBLIC
 //---------------------------------------------------- Fonctions publiques
@@ -112,7 +113,6 @@ void Commande ( char code, unsigned int value )
 		// Car parked at spot <value> now wants to leave
 		case 'S':
 			askExit ( value );
-			// Write to the exit gate through communication pipe
 			break;
 
 		default:

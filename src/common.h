@@ -1,4 +1,4 @@
-//---------- Interface du module <common> (fichier common.h) ---------
+//---------- Interface du module <common> (fichier common.h) -------------
 #if ! defined ( COMMON_H )
 #define COMMON_H
 
@@ -33,7 +33,7 @@ struct Car {
 	unsigned int licensePlate;
 	TypeUsager priority;
 	// Timestamp of the time at which this car has entered the lot
-	// Stays at 0 until the car has not fully parked.
+	// Stays at 0 until the car is not fully parked.
 	time_t entranceTime;
 
 	Car ( TypeUsager p )
@@ -86,8 +86,9 @@ struct CarRequest {
 // For use in the shared memory
 struct State {
 	// Spots
-	// The number of free spots can go below if requests are pending
+	// The number of free spots can go below 0 if requests are pending
 	int freeSpotsNumber;
+	// The cars currently parked (in each spot)
 	Car spots [ NB_PLACES ];
 	// Requests currently posted
 	int requestsNumber; // TODO: remove this redundant field?

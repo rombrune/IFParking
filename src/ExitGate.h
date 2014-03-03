@@ -27,6 +27,7 @@
 void ExitGate ( int pipeR, int pipeW );
 // Mode d'emploi :
 // <pipeR> and <pipeW> are the file descriptors of a previously opened
-// communication pipe.
+// communication pipe. This tasks use the read end to receive information
+// from the KeyboardManagement task.
 
 #endif // EXITGATE_H_

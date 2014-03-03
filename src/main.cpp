@@ -29,6 +29,7 @@
 //------------------------------------------------------------------ Types
 
 //---------------------------------------------------- Variables statiques
+// Pipe file descriptors (to be passed on to Entrance and ExitGate tasks)
 static int PipeRead, PipeWrite;
 
 //------------------------------------------------------ Fonctions privées

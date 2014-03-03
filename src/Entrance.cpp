@@ -27,13 +27,13 @@
 
 //---------------------------------------------------- Variables statiques
 // A map to hold the currently running GarerVoiture tasks
-static map<pid_t, Car> currentValets;
+static std::map<pid_t, Car> currentValets;
 // A flag to record the authorization to let a car from the exit gate
 // (set in the SIGUSR1 signal handler)
 static bool authorizationReceived;
 
 //------------------------------------------------------ Fonctions privées
-static void placeCar ( unsigned int spotNumber, Car car )
+static void placeCar ( unsigned int spotNumber, Car const & car )
 // Mode d'emploi :
 // Updates the state of the parking lot (in shared memory)
 // to set <spotNumber> to the given car
@@ -45,7 +45,8 @@ static void placeCar ( unsigned int spotNumber, Car car )
 
 static void ack ( int signalNumber )
 // Mode d'emploi :
-// Acknowledges the death of a child GarerParking task.
+// Acknowledge the death of a children GarerParking tasks.
+// Update the shared state and display accordingly.
 {
 	// Retrieve the pid of the terminated child
 	int status;
@@ -60,12 +61,11 @@ static void ack ( int signalNumber )
 			Car car = currentValets[pid];
 			car.entranceTime = time ( NULL );
 
-			// Update the state of the parking lot
-			placeCar ( spotNumber, car );
-
 			// Remove this pid from the list of running tasks
 			currentValets.erase ( pid );
 
+			// Update the state of the parking lot
+			placeCar ( spotNumber, car );
 			// Display the newly parked car
 			AfficherPlace ( spotNumber, car.priority, 
 							car.licensePlate, car.entranceTime);
@@ -80,7 +80,7 @@ static void die ( int signalNumber )
 	MaskSignal ( SIGCHLD );
 
 	// Kill every running GarerVoiture
-	for ( map<pid_t, Car>::iterator it = currentValets.begin();
+	for ( std::map<pid_t, Car>::iterator it = currentValets.begin();
 			it != currentValets.end(); ++it )
 	{
 		kill ( it->first, SIGUSR2 );
@@ -139,7 +139,7 @@ static bool canGoIn ( )
 	bool allowed = ( state->freeSpotsNumber >= 0 );
 	ReleaseSharedState ( state );
 	return allowed;
-}
+} // Fin de canGoIn
 
 static void decrementFreeSpots ( )
 {
@@ -148,9 +148,7 @@ static void decrementFreeSpots ( )
 	ReleaseSharedState ( state );
 } // Fin de decrementFreeSpots
 
-static void placeRequest ( TypeBarriere entrance, Car car )
-// Contrat :
-// 0 <= entrance < NB_BARRIERES_ENTREES
+static void placeRequest ( TypeBarriere entrance, Car const & car )
 {
 	time_t now = time ( NULL );
 	CarRequest request ( entrance, car, now, getpid ( ) );
@@ -166,22 +164,21 @@ static void placeRequest ( TypeBarriere entrance, Car car )
 static void authorize ( int signalNumber )
 // Mode d'emploi :
 // This signal handler is called when the exit gate
-// allows us to let our car in
+// allows us to let our car in.
 {
 	authorizationReceived = true;
-}
+} // Fin de authorize
 
 //////////////////////////////////////////////////////////////////  PUBLIC
 //---------------------------------------------------- Fonctions publiques
 void Entrance ( TypeBarriere entrance )
 // Algorithme :
-// 1. Dequeue a car from the mailbox (or wait for a car to arrive in the mailbox)
-// 2. Read the number of available spots in the semcount
-// 3. Read the number of current entrance requests in the shared memory
-// 4. If available > request, go to 6
-// 5. Place a request in the shared memory and wait for SIGUSR1
+// 1. Dequeue a car from the mailbox (or wait for a car to arrive in the mailbox) and decrement the number of available spots
+// 2. Read the number of available spots (from the shared memory)
+// 4. If there's enough space to go in directly, go to 6
+// 5. Otherwise, place a request in the shared memory and wait for SIGUSR1
 // 6. A spot is available for us, call GarerVoiture()
-// 7. Sleep for ENTRANCE_SLEEP_DELAY seconds
+// 7. Sleep for <ENTRANCE_SLEEP_DELAY> seconds
 // 8. Goto step 1.
 {
 	init ( );
