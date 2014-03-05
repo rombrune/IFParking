@@ -16,7 +16,7 @@ CLEAN=clean
 
 SRCDIR=src
 OUTPUTDIR=bin
-EXE=parking
+EXE=Parking
 
 FILES= common.h KeyboardManagement.h Entrance.h ExitGate.h
 

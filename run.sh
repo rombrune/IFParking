@@ -1,6 +1,6 @@
 #! /bin/sh
 dir="bin"
-target="parking"
+target="Parking"
 
 ps -fu `whoami` | grep -v grep | grep $target > $dir/ps.before
 ipcs > $dir/ipcs.before
