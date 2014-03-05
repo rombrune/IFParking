@@ -99,6 +99,7 @@ void Commande ( char code, unsigned int value )
 	switch ( code ) {
 		// Quit the application
 		case 'Q':
+			close ( PipeWrite );
 			exit( 0 );
 			break;
 
