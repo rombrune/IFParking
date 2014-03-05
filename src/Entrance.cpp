@@ -43,23 +43,15 @@ static void placeCar ( unsigned int spotNumber, Car const & car )
 	ReleaseSharedState ( state );
 } // Fin de placeCar
 
-static bool canGoIn ( )
+static int decrementFreeSpots ( )
 // Mode d'emploi :
-// Checks in the parking lot state (shared memory)
-// to see if we can send a car in right away, or if we should
-// rather place a request and wait to be signaled.
-{
-	State * state = ObtainSharedState ( );
-	bool allowed = ( state->freeSpotsNumber >= 0 );
-	ReleaseSharedState ( state );
-	return allowed;
-} // Fin de canGoIn
-
-static void decrementFreeSpots ( )
+// Returns the number of free spots left (after decrementing)
 {
 	State * state = ObtainSharedState ( );
 	state->freeSpotsNumber--;
+	int left = state->freeSpotsNumber;
 	ReleaseSharedState ( state );
+	return left;
 } // Fin de decrementFreeSpots
 
 static void placeRequest ( TypeBarriere entrance, Car const & car )
@@ -108,7 +100,7 @@ static void ack ( int signalNumber )
 			placeCar ( spotNumber, car );
 			// Display the newly parked car
 			AfficherPlace ( spotNumber, car.priority, 
-							car.licensePlate, car.entranceTime);
+							car.licensePlate, car.entranceTime );
 		}
 	}
 } // Fin de ack
@@ -188,12 +180,12 @@ void Entrance ( TypeBarriere entrance )
 	for ( ; ; )
 	{
 		Car next = waitForCar ( entrance );
-		decrementFreeSpots ( );
+		int freeSpotsLeft = decrementFreeSpots ( );
 		
 		// If there's no free spot right now, place a request
 		// and wait patiently to be signaled by the exit gate
 		// TODO: let GarerVoiture make the canGoIn check?
-		if ( ! canGoIn ( ) )
+		if ( freeSpotsLeft < 0 )
 		{
 			authorizationReceived = false;
 			placeRequest ( entrance, next );
