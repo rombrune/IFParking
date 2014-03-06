@@ -35,7 +35,6 @@ static map<unsigned int, pid_t> currentValets;
 static int comparePriority ( CarRequest const & a, CarRequest const & b )
 // Mode d'emploi :
 // Return 1 if request <a> is more prioritary than request <b>.
-// Return 0 if both cars are as prioritary.
 // Return -1 if request <a> is less prioritary than request <b>.
 {
 	// TODO: check thoroughly
@@ -53,7 +52,9 @@ static int comparePriority ( CarRequest const & a, CarRequest const & b )
 
 	if ( (a.car.priority == b.car.priority) && (a.date == b.date) )
 	{
-		return 0;
+		// Licence plates are numbered in increasing order
+		// TODO: handle license plate rollover
+		return ( a.car.licensePlate < b.car.licensePlate ? 1 : -1 );
 	}
 	// A professor is always prioritary
 	else if ( (a.car.priority == PROF) && (b.car.priority != PROF) )
@@ -65,13 +66,9 @@ static int comparePriority ( CarRequest const & a, CarRequest const & b )
 		return -1;
 	}
 	// Otherwise, first arrived => first served
-	else if ( a.date < b.date )
-	{
-		return 1;
-	}
 	else
 	{
-		return -1;
+		return ( a.date < b.date ? 1 : -1 );
 	}
 } // Fin de comparePriority
 
