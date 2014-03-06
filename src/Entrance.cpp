@@ -22,9 +22,7 @@
 #include "common.h"
 ///////////////////////////////////////////////////////////////////  PRIVE
 //------------------------------------------------------------- Constantes
-
 //------------------------------------------------------------------ Types
-
 //---------------------------------------------------- Variables statiques
 // A map to hold the currently running GarerVoiture tasks
 static std::map<pid_t, Car> currentValets;
@@ -165,7 +163,8 @@ static Car waitForCar ( TypeBarriere entrance )
 //---------------------------------------------------- Fonctions publiques
 void Entrance ( TypeBarriere entrance )
 // Algorithme :
-// 1. Dequeue a car from the mailbox (or wait for a car to arrive in the mailbox) and decrement the number of available spots
+// 1. Dequeue a car from the mailbox (or wait for a car to arrive in 
+// the mailbox) and decrement the number of available spots
 // 2. Read the number of available spots (from the shared memory)
 // 4. If there's enough space to go in directly, go to 6
 // 5. Otherwise, place a request in the shared memory and wait for SIGUSR1

@@ -11,7 +11,7 @@
 //------------------------------------------------------------------------
 // Rôle de la tâche <ExitGate>
 // Manages the exit gate of the parking lot.
-// Also responsible for signaling entrances
+// Also responsible for signaling entrances 
 // when the parking lot stops being full.
 //------------------------------------------------------------------------
 
@@ -19,7 +19,6 @@
 //--------------------------------------------------- Interfaces utilisées
 #include "Outils.h"
 //------------------------------------------------------------- Constantes
-
 //------------------------------------------------------------------ Types
 
 //////////////////////////////////////////////////////////////////  PUBLIC

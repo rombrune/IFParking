@@ -62,7 +62,8 @@ struct Car {
 	}
 	// Copy constructor: do not increment the counter
 	Car ( Car const & other )
-		: licensePlate ( other.licensePlate ), priority ( other.priority ), entranceTime ( other.entranceTime )
+		: licensePlate ( other.licensePlate ),
+		  priority ( other.priority ), entranceTime ( other.entranceTime )
 	{
 		// Empty
 	}

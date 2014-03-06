@@ -19,13 +19,12 @@
 //--------------------------------------------------- Interfaces utilisées
 #include "Outils.h"
 //------------------------------------------------------------- Constantes
-
 //------------------------------------------------------------------ Types
 
 //////////////////////////////////////////////////////////////////  PUBLIC
 //---------------------------------------------------- Fonctions publiques
 void Entrance ( TypeBarriere entrance );
 // Mode d'emploi :
-// Starts an Entrance task to handle <entrance>.
+// Start an Entrance task to handle <entrance>.
 
 #endif // ENTRANCE_H_

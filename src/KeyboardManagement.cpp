@@ -19,9 +19,7 @@
 #include "KeyboardManagement.h"
 ///////////////////////////////////////////////////////////////////  PRIVE
 //------------------------------------------------------------- Constantes
-
 //------------------------------------------------------------------ Types
-
 //---------------------------------------------------- Variables statiques
 static int PipeWrite;
 
@@ -53,8 +51,6 @@ static TypeBarriere getTypeBarriere ( int entranceNumber, TypeUsager priority )
 static void queueCar ( TypeBarriere entrance, TypeUsager priority )
 // Mode d'emploi :
 // Add a new car with the given priority at given entrance
-// Contrat :
-//
 {
 	// Prepare the message
 	// The message type indicates the entrance

@@ -21,9 +21,7 @@
 #include "common.h"
 ///////////////////////////////////////////////////////////////////  PRIVE
 //------------------------------------------------------------- Constantes
-
 //------------------------------------------------------------------ Types
-
 //---------------------------------------------------- Variables statiques
 // The file descriptor of the communication pipe
 static int PipeRead;
@@ -36,10 +34,8 @@ static int comparePriority ( CarRequest const & a, CarRequest const & b )
 // Mode d'emploi :
 // Return 1 if request <a> is more prioritary than request <b>.
 // Return -1 if request <a> is less prioritary than request <b>.
+// TODO: rewrite as operator< ?
 {
-	// TODO: check thoroughly
-	// TODO: rewrite as operator< ?
-
 	// Particular case: one of the passed requests is not valid
 	if ( a.date == 0 )
 	{
