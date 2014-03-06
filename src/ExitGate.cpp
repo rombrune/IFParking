@@ -185,6 +185,8 @@ static void die ( int signalNumber )
 		kill ( it->second, SIGUSR2 );
 		waitpid( it->second, NULL, 0 );
 	}
+
+	close( PipeRead );
 	exit ( 0 );
 } // Fin de die
 
