@@ -182,6 +182,8 @@ void Entrance ( TypeBarriere entrance )
 		Car next = waitForCar ( entrance );
 		int freeSpotsLeft = decrementFreeSpots ( );
 		
+		DessinerVoitureBarriere ( entrance, next.priority );
+
 		// If there's no free spot right now, place a request
 		// and wait patiently to be signaled by the exit gate
 		// TODO: let GarerVoiture make the canGoIn check?
